@@ -8,7 +8,7 @@ app-template:
         lidarr:
           image:
             repository: ghcr.io/onedr0p/lidarr
-            tag: 2.2.5.4141
+            tag: 2.4.3.4248
 
           env:
             TZ: Europe/Madrid
