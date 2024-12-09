@@ -12,4 +12,4 @@ helmCharts:
     releaseName: keycloak
     repo: https://charts.bitnami.com/bitnami
     valuesFile: values.yaml
-    version: 24.2.2
+    version: 24.2.3
