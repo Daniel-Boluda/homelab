@@ -3,7 +3,7 @@ name: oauth2-proxy-kubeadmin
 version: 0.0.0
 dependencies:
   - name: oauth2-proxy
-    version: 7.8.0
+    version: 7.8.1
     repository: https://oauth2-proxy.github.io/manifests
     #see https://github.com/oauth2-proxy/manifests/blob/main/helm/oauth2-proxy/values.yaml
     #https://github.com/ShadyF/k8s-homelab/blob/master/cluster/apps/networking/oauth2-proxy/oauth2-proxy-helm-release.yaml
