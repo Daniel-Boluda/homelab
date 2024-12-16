@@ -97,7 +97,7 @@ app-template:
         whisper:
           image:
             repository: rhasspy/wyoming-whisper
-            tag: 2.2.0
+            tag: 2.4.0
           args:
             - --model
             - large-v3
