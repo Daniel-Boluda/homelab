@@ -3,5 +3,5 @@ name: prestashop-elsuenodediana-db
 version: 0.0.0
 dependencies:
 - name: mariadb
-  version: 20.3.1
+  version: 20.4.1
   repository: https://charts.bitnami.com/bitnami
