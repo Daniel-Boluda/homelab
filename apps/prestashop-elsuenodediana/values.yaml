@@ -8,7 +8,7 @@ app-template:
         elsuenodediana:
           image:
             repository: prestashop/prestashop
-            tag: 8.2.0
+            tag: 8.2.1
 
           env:
             TZ: Europe/Madrid
