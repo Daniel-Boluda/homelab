@@ -4,4 +4,4 @@ metadata:
   name: home-assistant-config-customfan
 data:
 # this removes subdirectories hiterarchy
-{{ (.Files.Glob "config/custom_components/custom_fan/*").AsConfig | indent 2 }}
+{{ (.Files.Glob "config/custom_components/**/*").AsConfig | indent 2 }}
