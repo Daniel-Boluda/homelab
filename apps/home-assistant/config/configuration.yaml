@@ -32,3 +32,11 @@ notify: !include secrets/notify.yaml
 
 fan:
   - platform: custom_fan
+
+custom_scenes:
+  escena_noche:
+    switch.luz_izquierda_sofa: "off"
+    switch.luz_derecha_sofa: "on"
+  escena_dia:
+    switch.luz_izquierda_sofa: "on"
+    switch.luz_derecha_sofa: "off"
