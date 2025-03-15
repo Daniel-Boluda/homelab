@@ -1,0 +1,10 @@
+{
+    "domain": "custom_scenes",
+    "name": "Custom Fan",
+    "documentation": "https://github.com/dabol/custom_scenes",
+    "dependencies": [],
+    "codeowners": ["@dabol"],
+    "requirements": [],
+    "version": "0.1.0",
+    "icons": ["local:custom_scenes.svg"]
+  }
