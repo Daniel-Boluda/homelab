@@ -8,7 +8,7 @@ app-template:
         lidarr:
           image:
             repository: ghcr.io/home-operations/lidarr
-            tag: sha256-40f9658538aa43bb926290d06cc8453c79466de8a621ee0d3fe17816348763ab
+            tag: 2.10.1.4589@sha256:40f9658538aa43bb926290d06cc8453c79466de8a621ee0d3fe17816348763ab
 
           env:
             TZ: Europe/Madrid
