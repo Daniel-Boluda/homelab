@@ -7,8 +7,8 @@ app-template:
       containers:
         readarr:
           image:
-            repository: ghcr.io/onedr0p/readarr-develop
-            tag: 0.3.32
+            repository: ghcr.io/home-operations/readarr
+            tag: 0.4.12@sha256-126f98cd6b459d48ac0286249a4f7e499697a7bdfddfae8784afb11aa83e6b93
 
           env:
             TZ: Europe/Madrid
