@@ -185,7 +185,7 @@ spec:
         options:
           listing_visibility: "unauth"
         config:
-          oidc_discovery_url: https://keycloak.dbcloud.org/realms/master/.well-known/openid-configuration
+          oidc_discovery_url: https://keycloak.dbcloud.org/realms/master
           oidc_client_id: vault
           oidc_client_secret: "${env `OIDC_CLIENT_SECRET`}"
           default_role: admin
