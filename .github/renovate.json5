@@ -12,7 +12,7 @@
   commitMessagePrefix: '{{parentDir}}: ',
   timezone: 'Europe/Madrid',
   schedule: [
-    'after 4am and before 10pm on Monday',
+    'after 4am and before 10pm on Friday',
   ],
   enabledManagers: [
     'argocd',
