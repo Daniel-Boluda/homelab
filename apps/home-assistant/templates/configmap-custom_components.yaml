@@ -9,7 +9,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: home-assistant-config-stateful_pc
+  name: home-assistant-config-statefulpc
 data:
 # this removes subdirectories hiterarchy
 {{ (.Files.Glob "config/custom_components/stateful_pc/*").AsConfig | indent 2 }}

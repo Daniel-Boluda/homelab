@@ -440,7 +440,7 @@ app-template:
     configmap-stateful_pc:
       enabled: true
       type: configMap
-      name: home-assistant-config-stateful_pc
+      name: home-assistant-config-statefulpc
       advancedMounts:
         hass:
           hass:
