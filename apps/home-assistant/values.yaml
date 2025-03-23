@@ -437,7 +437,7 @@ app-template:
         hass:
           hass:
           - path: /config/custom_components/custom_fan
-    configmap-stateful_pc:
+    configmap-statefulpc:
       enabled: true
       type: configMap
       name: home-assistant-config-statefulpc
