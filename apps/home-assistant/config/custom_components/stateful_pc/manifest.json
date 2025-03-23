@@ -1,0 +1,10 @@
+{
+  "domain": "stateful_pc",
+  "name": "stateful PC",
+  "documentation": "https://github.com/yourusername/stateful_pc",
+  "dependencies": [],
+  "codeowners": ["@yourusername"],
+  "requirements": ["wakeonlan"],
+  "version": "0.1.0",
+  "icons": ["local:stateful_pc.svg"]
+}

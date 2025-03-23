@@ -33,3 +33,11 @@ notify: !include secrets/notify.yaml
 
 fan:
   - platform: custom_fan
+
+stateful_pc:
+  host: "192.168.1.249"
+  mac: "E8-9C-25-DD-C0-2A"
+  shutdown_ssh: true
+  shutdown_user: "dabol"
+  shutdown_command: "shutdown /s /t 0"
+  name: "Dabol-meshy"
