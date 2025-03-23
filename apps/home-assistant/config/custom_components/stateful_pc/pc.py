@@ -72,7 +72,6 @@ class PCSwitch(SwitchEntity):
             try:
                 process = await asyncio.create_subprocess_exec(
                     "ssh", "-i", self._ssh_key,
-                    "-o", "StrictHostKeyChecking=no",
                     "-o", "UserKnownHostsFile=/config/.ssh/known_hosts",
                     f"{self._shutdown_user}@{self._host}",
                     self._shutdown_command,
