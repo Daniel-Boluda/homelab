@@ -5,3 +5,11 @@ metadata:
 data:
 # this removes subdirectories hiterarchy
 {{ (.Files.Glob "config/custom_components/custom_fan/*").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-assistant-config-stateful_pc
+data:
+# this removes subdirectories hiterarchy
+{{ (.Files.Glob "config/custom_components/stateful_pc/*").AsConfig | indent 2 }}

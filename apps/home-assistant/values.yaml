@@ -437,6 +437,14 @@ app-template:
         hass:
           hass:
           - path: /config/custom_components/custom_fan
+    configmap-stateful_pc:
+      enabled: true
+      type: configMap
+      name: home-assistant-config-stateful_pc
+      advancedMounts:
+        hass:
+          hass:
+          - path: /config/custom_components/stateful_pc
     appdaemon:
       enabled: true
       type: configMap

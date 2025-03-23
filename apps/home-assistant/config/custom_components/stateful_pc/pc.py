@@ -7,17 +7,6 @@ from wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
 
-# Example configuration (in configuration.yaml):
-#
-# stateful_pc:
-#   host: "192.168.1.100"
-#   mac: "AA:BB:CC:DD:EE:FF"
-#   shutdown_ssh: true
-#   shutdown_user: "your_username"
-#   shutdown_command: "shutdown /s /t 0"
-#   name: "Living Room PC"
-#
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     _LOGGER.debug("Setting up stateful PC platform.")
 
@@ -26,19 +15,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     shutdown_ssh = config.get("shutdown_ssh", False)
     shutdown_user = config.get("shutdown_user")
     shutdown_command = config.get("shutdown_command")
+    ssh_key = config.get("ssh_key")
     name = config.get("name", "PC")
 
     if not host or not mac:
         _LOGGER.error("Host and MAC must be provided in the configuration")
         return
 
-    async_add_entities([PCSwitch(hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command)])
+    async_add_entities([PCSwitch(hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command, ssh_key)])
     _LOGGER.info("stateful PC platform setup complete.")
 
 class PCSwitch(SwitchEntity):
     """Representation of a PC switch with WoL and state tracking using SSH for shutdown."""
 
-    def __init__(self, hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command):
+    def __init__(self, hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command, ssh_key):
         self.hass = hass
         self._name = name
         self._host = host
@@ -46,6 +36,7 @@ class PCSwitch(SwitchEntity):
         self._shutdown_ssh = shutdown_ssh
         self._shutdown_user = shutdown_user
         self._shutdown_command = shutdown_command
+        self._ssh_key = ssh_key
         self._state = False
         self._available = True
 
@@ -69,21 +60,18 @@ class PCSwitch(SwitchEntity):
         _LOGGER.info("Sending Wake-on-LAN magic packet to %s", self._name)
         try:
             send_magic_packet(self._mac)
-            # Optimistically mark the PC as on; the next ping will verify its state.
-            self._state = True
+            self._state = True  # Optimistically mark as on
         except Exception as e:
             _LOGGER.error("Error sending magic packet: %s", e)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn off the PC using an SSH shutdown command."""
-        if self._shutdown_ssh and self._shutdown_user and self._shutdown_command:
+        if self._shutdown_ssh and self._shutdown_user and self._shutdown_command and self._ssh_key:
             _LOGGER.info("Sending SSH shutdown command to %s", self._name)
             try:
-                # Construct the SSH command: ssh user@host <shutdown_command>
-                # Make sure that passwordless SSH (via keys) is configured.
                 process = await asyncio.create_subprocess_exec(
-                    "ssh",
+                    "ssh", "-i", self._ssh_key,
                     f"{self._shutdown_user}@{self._host}",
                     self._shutdown_command,
                     stdout=asyncio.subprocess.PIPE,
@@ -98,7 +86,6 @@ class PCSwitch(SwitchEntity):
                 _LOGGER.error("Error executing SSH shutdown command: %s", e)
         else:
             _LOGGER.warning("SSH shutdown not properly configured for %s", self._name)
-        # Optimistically mark the PC as off.
         self._state = False
         self.async_write_ha_state()
 
