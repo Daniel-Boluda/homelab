@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_MAC
 from wakeonlan import send_magic_packet
 
 _LOGGER = logging.getLogger(__name__)
@@ -10,29 +9,33 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     _LOGGER.debug("Setting up stateful PC platform.")
 
-    host = config.get(CONF_HOST)
-    mac = config.get(CONF_MAC)
+    host = config.get("host")
+    wol_mac = config.get("wol_mac")
+    wol_broadcast_address = config.get("wol_broadcast_address")
+    wol_port = config.get("wol_port")
     shutdown_ssh = config.get("shutdown_ssh", False)
     shutdown_user = config.get("shutdown_user")
     shutdown_command = config.get("shutdown_command")
     ssh_key = config.get("ssh_key")
     name = config.get("name", "PC")
 
-    if not host or not mac:
+    if not host or not wol_mac:
         _LOGGER.error("Host and MAC must be provided in the configuration")
         return
 
-    async_add_entities([PCSwitch(hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command, ssh_key)])
+    async_add_entities([PCSwitch(hass, name, host, wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key)])
     _LOGGER.info("stateful PC platform setup complete.")
 
 class PCSwitch(SwitchEntity):
     """Representation of a PC switch with WoL and state tracking using SSH for shutdown."""
 
-    def __init__(self, hass, name, host, mac, shutdown_ssh, shutdown_user, shutdown_command, ssh_key):
+    def __init__(self, hass, name, host, wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key):
         self.hass = hass
         self._name = name
         self._host = host
-        self._mac = mac
+        self._wol_mac = wol_mac
+        self._wol_broadcast_address = wol_broadcast_address
+        self._wol_port = wol_port
         self._shutdown_ssh = shutdown_ssh
         self._shutdown_user = shutdown_user
         self._shutdown_command = shutdown_command
@@ -59,7 +62,7 @@ class PCSwitch(SwitchEntity):
         """Turn on the PC using Wake-on-LAN."""
         _LOGGER.info("Sending Wake-on-LAN magic packet to %s", self._name)
         try:
-            send_magic_packet(self._mac)
+            send_magic_packet(self._wol_mac, self._wol_broadcast_address, self._wol_port)
             self._state = True  # Optimistically mark as on
         except Exception as e:
             _LOGGER.error("Error sending magic packet: %s", e)
