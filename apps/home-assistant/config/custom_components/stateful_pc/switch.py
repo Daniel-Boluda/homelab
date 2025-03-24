@@ -87,15 +87,20 @@ class PCSwitch(SwitchEntity):
                     api_url = self._wol_apiurl
                     _LOGGER.debug("Using provided API URL: %s", api_url)
                 
-                # Construct the full URL endpoint (e.g., http://192.168.1.248:5000/wake/E8-9C-25-DD-C0-2A)
-                full_url = f"{api_url}/wake/{self._wol_mac}"
+                # Use the /wake endpoint and send the MAC address in JSON payload
+                full_url = f"{api_url}/wake"
                 _LOGGER.debug("Constructed WOL-API URL: %s", full_url)
                 
-                headers = {"x-api-key": self._wol_apikey} if self._wol_apikey else {}
+                # Set headers with X-API-Key as expected by the Flask app
+                headers = {"X-API-Key": self._wol_apikey} if self._wol_apikey else {}
                 _LOGGER.debug("Sending request with headers: %s", headers)
+                
+                # Use the key "mac_address" to match the Flask API
+                payload = {"mac_address": self._wol_mac}
+                _LOGGER.debug("Payload for WOL-API request: %s", payload)
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.post(full_url, headers=headers) as response:
+                    async with session.post(full_url, headers=headers, json=payload) as response:
                         if response.status != 200:
                             _LOGGER.error("WOL-API request failed with status %s", response.status)
                             _LOGGER.error("Response body: %s", await response.text())
