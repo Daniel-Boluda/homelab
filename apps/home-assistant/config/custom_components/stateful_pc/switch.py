@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import aiohttp
 
 from homeassistant.components.switch import SwitchEntity
 from wakeonlan import send_magic_packet
@@ -10,6 +11,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.debug("Setting up stateful PC platform.")
 
     host = config.get("host")
+    wol_mode = config.get("wol_mode","host")
+    wol_apiurl = config.get("wol_apiurl")
+    wol_apikey = config.get("wol_apikey")
     wol_mac = config.get("wol_mac")
     wol_broadcast_address = config.get("wol_broadcast_address")
     wol_port = config.get("wol_port")
@@ -23,19 +27,30 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         _LOGGER.error("Host and MAC must be provided in the configuration")
         return
 
-    async_add_entities([PCSwitch(hass, name, host, wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key)])
+    async_add_entities([PCSwitch(hass, name, host,wol_mode ,wol_apiurl ,wol_apikey , wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key)])
     _LOGGER.info("stateful PC platform setup complete.")
 
 class PCSwitch(SwitchEntity):
     """Representation of a PC switch with WoL and state tracking using SSH for shutdown."""
 
-    def __init__(self, hass, name, host, wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key):
+    def __init__(self, hass, name, host,wol_mode ,wol_apiurl ,wol_apikey , wol_mac,wol_broadcast_address,wol_port, shutdown_ssh, shutdown_user, shutdown_command, ssh_key):
         self.hass = hass
         self._name = name
         self._host = host
+        
+        #wol_mode can be "host" or "wol-api"
+        self._wol_mode = wol_mode
+        
         self._wol_mac = wol_mac
+        
+        #"wol-api" params
+        self._wol_apiurl = wol_apiurl
+        self._wol_apikey = wol_apikey
+        
+        #"host" params
         self._wol_broadcast_address = wol_broadcast_address
         self._wol_port = wol_port
+        
         self._shutdown_ssh = shutdown_ssh
         self._shutdown_user = shutdown_user
         self._shutdown_command = shutdown_command
@@ -60,12 +75,42 @@ class PCSwitch(SwitchEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the PC using Wake-on-LAN."""
-        _LOGGER.info("Sending Wake-on-LAN magic packet to %s", self._name)
+        _LOGGER.info("Attempting to send Wake-on-LAN signal to %s", self._name)
         try:
-            send_magic_packet(self._wol_mac, self._wol_broadcast_address, self._wol_port)
+            if self._wol_mode == "wol-api":
+                _LOGGER.info("Using WOL-API mode to turn on the PC.")
+                # Ensure the URL starts with http:// or https://
+                if not self._wol_apiurl.startswith(("http://", "https://")):
+                    api_url = "http://" + self._wol_apiurl
+                    _LOGGER.debug("API URL was missing scheme, defaulting to http://")
+                else:
+                    api_url = self._wol_apiurl
+                    _LOGGER.debug("Using provided API URL: %s", api_url)
+                
+                # Construct the full URL endpoint (e.g., http://192.168.1.248:5000/wake/E8-9C-25-DD-C0-2A)
+                full_url = f"{api_url}/wake/{self._wol_mac}"
+                _LOGGER.debug("Constructed WOL-API URL: %s", full_url)
+                
+                headers = {"x-api-key": self._wol_apikey} if self._wol_apikey else {}
+                _LOGGER.debug("Sending request with headers: %s", headers)
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(full_url, headers=headers) as response:
+                        if response.status != 200:
+                            _LOGGER.error("WOL-API request failed with status %s", response.status)
+                            _LOGGER.error("Response body: %s", await response.text())
+                        else:
+                            _LOGGER.info("WOL-API request succeeded with status %s", response.status)
+            else:
+                _LOGGER.info("Using local Wake-on-LAN packet method.")
+                # Fallback to using local Wake-on-LAN packet
+                send_magic_packet(self._wol_mac, ip_address=self._wol_broadcast_address, port=self._wol_port)
+                _LOGGER.debug("Sent magic packet to %s at %s:%s", self._wol_mac, self._wol_broadcast_address, self._wol_port)
+
             self._state = True  # Optimistically mark as on
+            _LOGGER.info("PC is now on (optimistic state).")
         except Exception as e:
-            _LOGGER.error("Error sending magic packet: %s", e)
+            _LOGGER.error("Error sending wake signal: %s", e)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):

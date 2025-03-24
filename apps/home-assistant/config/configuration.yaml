@@ -37,9 +37,12 @@ fan:
 switch:
   - platform: stateful_pc
     host: "192.168.1.249"
+    wol_mode: "wol-api"
     wol_mac: "E8-9C-25-DD-C0-2A"
-    wol_broadcast_address: "192.168.1.255"
-    wol_port: 9
+    wol_apiurl: "http://192.168.1.248:5000"
+    wol_apikey: !secret wol_apikey
+    # wol_broadcast_address: "192.168.1.255"
+    # wol_port: 9
     shutdown_ssh: true
     ssh_key: !secret ssh_key
     shutdown_user: "dabol"
