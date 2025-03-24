@@ -95,7 +95,7 @@ class PCSwitch(SwitchEntity):
                 _LOGGER.debug("Sending request with headers: %s", headers)
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(full_url, headers=headers) as response:
+                    async with session.post(full_url, headers=headers) as response:
                         if response.status != 200:
                             _LOGGER.error("WOL-API request failed with status %s", response.status)
                             _LOGGER.error("Response body: %s", await response.text())
