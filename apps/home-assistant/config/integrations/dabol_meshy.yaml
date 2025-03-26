@@ -1,0 +1,26 @@
+alias: Turn PC On and Off
+description: Turns on the PC at 08:28 and turns it off at 19:00 daily
+trigger:
+  - platform: time
+    at: "08:28:00"
+  - platform: time
+    at: "19:00:00"
+action:
+  - choose:
+      - conditions:
+          - condition: time
+            after: "08:27:59"
+            before: "08:28:30"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: switch.dabol_meshy
+      - conditions:
+          - condition: time
+            after: "18:59:59"
+            before: "19:00:30"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: switch.dabol_meshy
+mode: single

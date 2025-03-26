@@ -36,7 +36,9 @@ alexa:
         - switch.modo_pelicula_stateful_scene
         - switch.modo_buenos_dias_stateful_scene
         - switch.modo_buenas_noches_stateful_scene
+        - switch.dabol_meshy
     entity_config:
+      # all alexa display categories are available at https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-discovery.html#display-categories
       climate.radiador_despacho:
         name: "Radiador del despacho"
         description: "Controla la luz temperatura del radiador del despacho"
@@ -169,3 +171,7 @@ alexa:
         name: "Escena de buenas noches"
         description: "Activa la escena de buenas noches"
         display_categories: LIGHT
+      switch.dabol_meshy:
+        name: "Ordenador del despacho"
+        description: "Enciende el ordenador del despacho"
+        display_categories: SMARTPLUG
