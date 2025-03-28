@@ -53,65 +53,7 @@ class PCSwitch(SwitchEntity):
         
         self._shutdown_ssh = shutdown_ssh
         self._shutdown_user = shutdown_user
-        if shutdown_command == "windows":
-            self._shutdown_command = """
-                powershell.exe -Command "
-                Add-Type -AssemblyName System.Windows.Forms, System.Drawing; 
-                $form=New-Object System.Windows.Forms.Form; 
-                $form.Text=''; 
-                $form.FormBorderStyle=[System.Windows.Forms.FormBorderStyle]::None; 
-                $form.Size=New-Object System.Drawing.Size(400,200); 
-                $form.StartPosition='CenterScreen'; 
-                $form.BackColor=[System.Drawing.Color]::DodgerBlue; 
-                $label=New-Object System.Windows.Forms.Label; 
-                $label.Text='Your PC will shut down in 1 minute. Click Cancel to stop it.'; 
-                $label.Font=New-Object System.Drawing.Font('Segoe UI',12,[System.Drawing.FontStyle]::Regular); 
-                $label.AutoSize=$false; 
-                $label.Size=New-Object System.Drawing.Size(360,60); 
-                $label.Location=New-Object System.Drawing.Point(20,20); 
-                $label.TextAlign='MiddleCenter'; 
-                $label.ForeColor=[System.Drawing.Color]::White; 
-                $form.Controls.Add($label); 
-                $button=New-Object System.Windows.Forms.Button; 
-                $button.Text='Cancel'; 
-                $button.Font=New-Object System.Drawing.Font('Segoe UI',10,[System.Drawing.FontStyle]::Bold); 
-                $button.Size=New-Object System.Drawing.Size(100,40); 
-                $button.Location=New-Object System.Drawing.Point(150,100); 
-                $button.BackColor=[System.Drawing.Color]::DodgerBlue; 
-                $button.ForeColor=[System.Drawing.Color]::White; 
-                $button.FlatStyle=[System.Windows.Forms.FlatStyle]::Flat; 
-                $button.FlatAppearance.BorderColor=[System.Drawing.Color]::White; 
-                $button.FlatAppearance.BorderSize=2; 
-                $button.Add_Click({$form.Tag='cancel'; $form.Close()}); 
-                $form.Controls.Add($button); 
-                $gpForm=New-Object System.Drawing.Drawing2D.GraphicsPath; 
-                $radius=20; 
-                $gpForm.AddArc(0,0,$radius,$radius,180,90); 
-                $gpForm.AddArc($form.Width-$radius,0,$radius,$radius,270,90); 
-                $gpForm.AddArc($form.Width-$radius,$form.Height-$radius,$radius,$radius,0,90); 
-                $gpForm.AddArc(0,$form.Height-$radius,$radius,$radius,90,90); 
-                $gpForm.CloseFigure(); 
-                $form.Region=New-Object System.Drawing.Region($gpForm); 
-                $gpButton=New-Object System.Drawing.Drawing2D.GraphicsPath; 
-                $bradius=10; 
-                $gpButton.AddArc(0,0,$bradius,$bradius,180,90); 
-                $gpButton.AddArc($button.Width-$bradius,0,$bradius,$bradius,270,90); 
-                $gpButton.AddArc($button.Width-$bradius,$button.Height-$bradius,$bradius,$bradius,0,90); 
-                $gpButton.AddArc(0,$button.Height-$bradius,$bradius,$bradius,90,90); 
-                $gpButton.CloseFigure(); 
-                $button.Region=New-Object System.Drawing.Region($gpButton); 
-                $timer=New-Object System.Windows.Forms.Timer; 
-                $timer.Interval=30000; 
-                $timer.Add_Tick({$form.Tag='timeout'; $form.Close()}); 
-                $timer.Start(); 
-                $form.ShowDialog(); 
-                if($form.Tag -ne 'cancel'){  
-                    shutdown /s /t 5
-                }"
-                """
-        else:
-            self._shutdown_command = shutdown_command
-        
+        self._shutdown_command = shutdown_command
         self._ssh_key = ssh_key
         self._state = False
         self._available = True
@@ -184,7 +126,7 @@ class PCSwitch(SwitchEntity):
                 process = await asyncio.create_subprocess_exec(
                     "ssh", "-i", self._ssh_key,
                     "-o", "UserKnownHostsFile=/config/.ssh/known_hosts",
-                    f"{self._shutdown_user}@{self._host}", 
+                    f"{self._shutdown_user}@{self._host}",
                     self._shutdown_command,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
