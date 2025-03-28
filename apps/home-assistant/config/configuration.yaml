@@ -46,6 +46,6 @@ switch:
     shutdown_ssh: true
     ssh_key: !secret ssh_key
     shutdown_user: "dabol"
-    shutdown_command: "shutdown /s /t 0"
+    shutdown_command: "windows"
     name: "Dabol-meshy"
 
