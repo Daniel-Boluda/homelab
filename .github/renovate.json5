@@ -198,5 +198,9 @@
       groupName: 'k3s upgrade',
       groupSlug: 'k3s-upgrade',
     },
+    {
+      "matchPackageNames": ["pdf/zfs_exporter"],
+      "enabled": false
+    }
   ],
 }
