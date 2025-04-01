@@ -11,6 +11,31 @@ spec:
   # specify a custom bank-vaults image with bankVaultsImage:
   # bankVaultsImage: ghcr.io/banzaicloud/bank-vaults:latest
 
+  resources:
+    vault:
+      requests:
+        memory: 500Mi
+        cpu: 20m
+      limits:
+        memory: 2Gi
+        cpu: 2
+
+    bankVaults:
+      requests:
+        memory: 18Mi
+        cpu: 10m
+      limits:
+        memory: 128Mi
+        cpu: 500m
+
+    prometheusExporter:
+      requests:
+        memory: 8Mi
+        cpu: 10m
+      limits:
+        memory: 128Mi
+        cpu: 500m
+
   # Common annotations for all created resources
   annotations:
     common/annotation: "true"
@@ -73,10 +98,11 @@ spec:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod-dns
       external-dns.alpha.kubernetes.io/enabled: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
     spec:
       ingressClassName: nginx-internal
       rules:
-        - host: &host vault.internal.dbcloud.org
+        - host: &host vault.internal.grigri.cloud
           http:
             paths:
               - backend:
@@ -128,12 +154,8 @@ spec:
     listener:
       tcp:
         address: "0.0.0.0:8200"
-        # TODO enable TLS?
-        tls_disable: true
-        # tls_cert_file: /vault/tls/server.crt
-        # tls_key_file: /vault/tls/server.key
-    telemetry:
-      statsd_address: localhost:9125
+        tls_cert_file: /vault/tls/server.crt
+        tls_key_file: /vault/tls/server.key
     ui: true
 
   vaultEnvsConfig:
@@ -179,7 +201,7 @@ spec:
         options:
           listing_visibility: "unauth"
         config:
-          oidc_discovery_url: https://keycloak.dbcloud.org/realms/master
+          oidc_discovery_url: https://idm.grigri.cloud/oauth2/openid/vault
           oidc_client_id: vault
           oidc_client_secret: "${env `OIDC_CLIENT_SECRET`}"
           default_role: admin
@@ -188,7 +210,7 @@ spec:
         roles:
           - name: default
             allowed_redirect_uris:
-              - https://vault.internal.dbcloud.org/ui/vault/auth/oidc/oidc/callback"
+              - https://vault.internal.grigri.cloud/ui/vault/auth/oidc/oidc/callback"
               - http://localhost:8250/oidc/callback
             user_claim: email
             # oidc_scopes: groups
@@ -225,8 +247,8 @@ spec:
           version: 2
       # https://learn.hashicorp.com/tutorials/vault/pki-engine
       - type: pki
-        path: pki/dbcloud
-        description: dbcloud root CA
+        path: pki/grigri
+        description: Grigri root CA
         config:
           default_lease_ttl: "9528h"  # 397 days -> max certificate validity
           max_lease_ttl: "87600h"  # 10 years
@@ -234,24 +256,24 @@ spec:
           config:
             - name: urls
               issuing_certificates:
-                - https://vault.internal.dbcloud.org/v1/pki/dbcloud/ca
+                - https://vault.internal.grigri.cloud/v1/pki/grigri/ca
               crl_distribution_points:
-                - https://vault.internal.dbcloud.org/v1/pki/dbcloud/crl
+                - https://vault.internal.grigri.cloud/v1/pki/grigri/crl
           roles:
-            - name: internal-certificates-dbcloud
+            - name: internal-certificates-grigri
               allow_localhost: false
               ttl: "9528h"
               max_ttl: "9528h"
               allow_glob_domains: true
               allowed_domains:
-                - "*.dbcloud"
+                - "*.grigri"
               allow_subdomains: true
               server_flag: true
               client_flag: false
               key_type: "rsa"
               key_bits: 4096
               signature_bits: 256
-              organization: "dbcloud"
+              organization: "grigri"
               country: "ES"
               locality: "Madrid"
               province: "Madrid"
@@ -259,7 +281,7 @@ spec:
               issuer_ref: "default"
       - type: pki
         path: pki/iot
-        description: dbcloud IoT root CA
+        description: Grigri IoT root CA
         config:
           default_lease_ttl: "9528h"  # 397 days -> max certificate validity
           max_lease_ttl: "87600h"  # 10 years
@@ -267,40 +289,40 @@ spec:
           config:
             - name: urls
               issuing_certificates:
-                - https://vault.internal.dbcloud.org/v1/pki/iot/ca
+                - https://vault.internal.grigri.cloud/v1/pki/iot/ca
               crl_distribution_points:
-                - https://vault.internal.dbcloud.org/v1/pki/iot/crl
+                - https://vault.internal.grigri.cloud/v1/pki/iot/crl
           root/generate:
             - name: internal
-              common_name: iot.dbcloud
+              common_name: iot.grigri
               ttl: "87600h"
               allow_subdomains: true
               allow_wildcard_certificates: true
               allowed_domains:
-                - "iot.dbcloud"
-                - "internal.dbcloud.org"
+                - "iot.grigri"
+                - "internal.grigri.cloud"
               key_type: "rsa"
               key_bits: 4096
-              organization: "dbcloud"
+              organization: "grigri"
               country: "ES"
               locality: "Madrid"
               province: "Madrid"
           roles:
-            - name: internal-certificates-dbcloud-iot
+            - name: internal-certificates-grigri-iot
               allow_localhost: false
               ttl: "9528h"
               max_ttl: "9528h"
               allow_glob_domains: true
               allowed_domains:
-                - "*.iot.dbcloud"
-                - "*.internal.dbcloud.org"
+                - "*.iot.grigri"
+                - "*.internal.grigri.cloud"
               allow_subdomains: true
               server_flag: true
               client_flag: false
               key_type: "rsa"
               key_bits: 4096
               signature_bits: 256
-              organization: "dbcloud"
+              organization: "grigri"
               country: "ES"
               locality: "Madrid"
               province: "Madrid"
