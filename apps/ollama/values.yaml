@@ -4,8 +4,10 @@ ollama:
       enabled: true
       type: 'nvidia'
     models:
-      pull: []
-        # - qwen2.5:3b
+      pull: 
+        - llama3.2:3b
+        - deepseek-coder-v2:16b
+        - gemma3:12b
       run: []
 
   extraEnv:
