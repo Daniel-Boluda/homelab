@@ -1,7 +1,7 @@
 alexa:
   smart_home:
     locale: es-ES
-    endpoint: 
+    endpoint: "https://api.eu.amazonalexa.com/v3/events"
     client_id: !secret alexa_clientid
     client_secret: !secret alexa_clientsecret
     filter:
