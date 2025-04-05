@@ -1,6 +1,9 @@
 alexa:
   smart_home:
     locale: es-ES
+    endpoint: 
+    client_id: !secret alexa_clientid
+    client_secret: !secret alexa_clientsecret
     filter:
       include_entities:
         - switch.luz_dormitorio
