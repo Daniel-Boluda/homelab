@@ -36,7 +36,7 @@ alexa:
         - climate.radiador_dormitorio
         - switch.modo_cocinar_stateful_scene
         - switch.modo_cena_stateful_scene
-        - switch.modo_pelicula_stateful_scene
+        - switch.modo_cine_stateful_scene
         - switch.modo_buenos_dias_stateful_scene
         - switch.modo_buenas_noches_stateful_scene
         - switch.dabol_meshy
@@ -155,25 +155,25 @@ alexa:
         description: "Monitoriza el estado de la puerta de entrada"
         display_categories: DOOR
       switch.modo_cocinar_stateful_scene:
-        name: "Escena de cocinar"
-        description: "Activa la escena de cocinar"
-        display_categories: LIGHT
+        name: "escena cocinar"
+        description: "Activa la escena cocinar"
+        display_categories: SMARTPLUG
       switch.modo_cena_stateful_scene:
-        name: "Escena de cenar"
-        description: "Activa la escena de cenar"
-        display_categories: LIGHT
+        name: "escena cenar"
+        description: "Activa la escena cenar"
+        display_categories: SMARTPLUG
       switch.modo_cine_stateful_scene:
-        name: "Escena de cine"
-        description: "Activa la escena de cine"
-        display_categories: LIGHT
+        name: "escena cine"
+        description: "Activa la escena cine"
+        display_categories: SMARTPLUG
       switch.modo_buenos_dias_stateful_scene:
-        name: "Escena de buenos dias"
-        description: "Activa la escena de buenos dias"
-        display_categories: LIGHT
+        name: "escena buenos dias"
+        description: "Activa la escena buenos dias"
+        display_categories: SMARTPLUG
       switch.modo_buenas_noches_stateful_scene:
-        name: "Escena de buenas noches"
-        description: "Activa la escena de buenas noches"
-        display_categories: LIGHT
+        name: "escena buenas noches"
+        description: "Activa la escena buenas noches"
+        display_categories: SMARTPLUG
       switch.dabol_meshy:
         name: "Ordenador del despacho"
         description: "Enciende el ordenador del despacho"
