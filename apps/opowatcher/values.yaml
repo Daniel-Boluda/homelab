@@ -1,0 +1,29 @@
+app-template:
+  controllers:
+    opowatcher:
+      labels:
+        backup/retain: quaterly
+      type: statefulset
+      containers:
+        opowatcher:
+          image:
+            repository: bolferdocker/opowatcher
+            tag: 0.0.0
+
+          envFrom:
+          - secretRef:
+              name: opowatcher-secrets
+
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1800Mi
+            limits:
+              memory: 4000Mi
+
+  persistence:
+    config:
+      enabled: true
+      globalMounts:
+      - path: /app
+      existingClaim: config-opowatcher
