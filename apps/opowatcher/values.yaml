@@ -16,10 +16,10 @@ app-template:
 
           resources:
             requests:
-              cpu: 500m
-              memory: 1800Mi
+              cpu: 50m
+              memory: 400Mi
             limits:
-              memory: 4000Mi
+              memory: 1000Mi
 
   persistence:
     config:
