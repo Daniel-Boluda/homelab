@@ -8,7 +8,7 @@ app-template:
         opowatcher:
           image:
             repository: bolferdocker/opowatcher
-            tag: 0.0.0
+            tag: 0.0.1
 
           envFrom:
           - secretRef:
@@ -25,5 +25,5 @@ app-template:
     config:
       enabled: true
       globalMounts:
-      - path: /app
+      - path: /app/html
       existingClaim: config-opowatcher
