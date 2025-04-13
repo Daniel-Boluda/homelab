@@ -46,10 +46,10 @@ ollama:
   podLabels:
     runtime-class: nvidia
   podSecurityContext:
-    fsGroup: 10001
-    runAsGroup: 10001
-    runAsNonRoot: true
-    runAsUser: 10001
+    fsGroup: 0
+    runAsGroup: 0
+    runAsNonRoot: false
+    runAsUser: 0
     fsGroupChangePolicy: "OnRootMismatch"
   securityContext:
     runAsNonRoot: false
