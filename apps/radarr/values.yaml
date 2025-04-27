@@ -8,7 +8,7 @@ app-template:
         radarr:
           image:
             repository: ghcr.io/home-operations/radarr
-            tag: 5.22.2.9862@sha256:9f24da505e2ba09957355a2b638660af2325e9861efb8b77583ca71fa6790789
+            tag: 5.22.4.9896@sha256:af9149d63dcae06ebccbd7ce20b0329f570d54e6632b23f007ee7a3e7e54966f
 
           env:
             TZ: Europe/Madrid
@@ -32,7 +32,7 @@ app-template:
         metrics:
           image:
             repository: ghcr.io/onedr0p/exportarr
-            tag: v2.1.0@sha256:ffe2065573db0f9717443143316eac6b335c37e6f6fea2f6a238ef3f134ee50a
+            tag: v2.2.0@sha256:320b0ea7399f4b9af4741dcdddd7d40c05c36b0359679305d8a54df4e97065df
           args:
             - radarr
             - --enable-additional-metrics
