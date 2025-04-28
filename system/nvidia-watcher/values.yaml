@@ -5,7 +5,7 @@ app-template:
         nvidia-watcher:
           image:
             repository: bolferdocker/nvidia-watcher
-            tag: 0.0.3
+            tag: 0.0.4
           env:
             LABEL_SELECTOR: runtime-class=nvidia
             POD_STATUS_REASON: UnexpectedAdmissionError
