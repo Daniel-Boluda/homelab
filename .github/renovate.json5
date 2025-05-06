@@ -6,13 +6,15 @@
     ':preserveSemverRanges',
     ':disableRateLimiting',
   ],
-  gitAuthor: 'Renovate <4646670+renovate85-bot[bot]@users.noreply.github.com>',
+  gitIgnoredAuthors: [
+    '/^\\d+\\+renovate\\d+-bot\\[bot\\]@users\\.noreply\\.github\\.com$/',
+  ],
   forkProcessing: 'enabled',
   rebaseWhen: 'conflicted',
   commitMessagePrefix: '{{parentDir}}: ',
   timezone: 'Europe/Madrid',
   schedule: [
-    'after 4am and before 10pm on Friday',
+    'after 4am and before 10am on Monday',
   ],
   enabledManagers: [
     'argocd',
@@ -33,8 +35,8 @@
     {
       customType: 'regex',
       description: 'Process custom dependencies with double quotes, after colon, URLs and variables',
-      fileMatch: [
-        '.+\\.ya?ml$',
+      managerFilePatterns: [
+        '/.+\\.ya?ml$/',
       ],
       matchStrings: [
         '#\\srenovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\n.*?"(?<currentValue>.*)"\n',
@@ -199,8 +201,19 @@
       groupSlug: 'k3s-upgrade',
     },
     {
-      "matchPackageNames": ["pdf/zfs_exporter"],
-      "enabled": false
-    }
+      description: 'Group app-template updates in one PR',
+      matchDatasources: [
+        'helm',
+      ],
+      groupName: 'app-template',
+      groupSlug: 'app-template',
+      additionalBranchPrefix: 'app-template-',
+      addLabels: [
+        'renovate/app-template',
+      ],
+      matchPackageNames: [
+        '/app-template/',
+      ],
+    },
   ],
 }
