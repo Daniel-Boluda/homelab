@@ -1,15 +1,23 @@
-apiVersion: v1
-kind: Service
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
 metadata:
   name: keystudio-iot-dbcloud-org
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "keystudio.iot.dbcloud.org"
-    external-dns.alpha.kubernetes.io/target: "192.168.1.120"
+spec:
+  endpoints:
+    - dnsName: keystudio.iot.dbcloud.org
+      recordType: A
+      recordTTL: 300
+      targets:
+        - "192.168.1.120"
 ---
-apiVersion: v1
-kind: Service
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
 metadata:
   name: switch-salon-iot-dbcloud-org
-  annotations:
-    external-dns.alpha.kubernetes.io/hostname: "switch-salon.iot.dbcloud.org"
-    external-dns.alpha.kubernetes.io/target: "192.168.1.11"
+spec:
+  endpoints:
+    - dnsName: switch-salon.iot.dbcloud.org
+      recordType: A
+      recordTTL: 300
+      targets:
+        - "192.168.1.11"
