@@ -25,10 +25,10 @@ extraEnvVars:
   value: "true"
 - name: KC_HTTP_RELATIVE_PATH
   value: "/"
-#- name: KC_PROXY
-#  value: "edge"
-#- name: KC_HOSTNAME_URL
-#  value: "https://keycloak.dbcloud.org"
+- name: KC_PROXY
+  value: "edge"
+- name: KC_HOSTNAME_URL
+  value: "https://keycloak.dbcloud.org"
 
 auth:
   createAdminUser: true
