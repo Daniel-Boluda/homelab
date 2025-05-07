@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keystudio.iot.dbcloud.org
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "keystudio.iot.dbcloud.org"
+    external-dns.alpha.kubernetes.io/target: "192.168.1.120"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: switch-salon.iot.dbcloud.org
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: "switch-salon.iot.dbcloud.org"
+    external-dns.alpha.kubernetes.io/target: "192.168.1.11"
