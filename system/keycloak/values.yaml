@@ -25,10 +25,10 @@ extraEnvVars:
   value: "true"
 - name: KC_HTTP_RELATIVE_PATH
   value: "/"
-- name: KC_PROXY
-  value: "edge"
-- name: KC_HOSTNAME_URL
-  value: "https://keycloak.dbcloud.org"
+#- name: KC_PROXY
+#  value: "edge"
+#- name: KC_HOSTNAME_URL
+#  value: "https://keycloak.dbcloud.org"
 
 auth:
   createAdminUser: true
@@ -45,7 +45,7 @@ tls:
   usePem: true
 # https://www.keycloak.org/server/reverseproxy
 # we want traffic from Ingress to backend to be with SSL termination
-# proxy: reencrypt
+  proxyHeaders: xforwarder
 
 extraContainerPorts:
 - name: admin
