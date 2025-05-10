@@ -10,7 +10,7 @@ app-template:
       containers:
         hass:
           image:
-            repository: bolferdocker/homeassistant-minio-patched:2025.5.1
+            repository: bolferdocker/homeassistant-minio-patched
             tag: 2025.5.1
           env:
             TZ: Europe/Madrid
