@@ -6,6 +6,7 @@
     ':preserveSemverRanges',
     ':disableRateLimiting',
   ],
+  dependencyDashboardTitle: 'Dependency Dashboard',
   gitIgnoredAuthors: [
     '/^\\d+\\+renovate\\d+-bot\\[bot\\]@users\\.noreply\\.github\\.com$/',
   ],
