@@ -23,6 +23,8 @@ alexa:
         - switch.luz_entrada_dormitorio
         - switch.luz_bano_dormitorio
         - switch.luz_ducha_dormitorio
+        - switch.luz_aseo
+        - switch.luz_banera
         - cover.persiana_salon
         - cover.persiana_invitados
         - cover.persiana_dormitorio
@@ -40,6 +42,7 @@ alexa:
         - switch.modo_buenos_dias_stateful_scene
         - switch.modo_buenas_noches_stateful_scene
         - switch.dabol_meshy
+        - switch.extractor_aseo
     entity_config:
       # all alexa display categories are available at https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-discovery.html#display-categories
       climate.radiador_despacho:
@@ -118,6 +121,14 @@ alexa:
         name: "Luz de la ducha del dormitorio"
         description: "Controla la luz de la ducha del dormitorio"
         display_categories: LIGHT
+      switch.luz_aseo:
+        name: "Luz del aseo"
+        description: "Controla la luz del aseo"
+        display_categories: LIGHT
+      switch.luz_banera:
+        name: "Luz de la bañera del aseo"
+        description: "Controla la luz de la bañera del aseo"
+        display_categories: LIGHT
       cover.persiana_despacho:
         name: "Persiana del despacho"
         description: "Controla la persiana del despacho"
@@ -177,4 +188,8 @@ alexa:
       switch.dabol_meshy:
         name: "Ordenador del despacho"
         description: "Enciende el ordenador del despacho"
+        display_categories: SMARTPLUG
+      switch.extractor_aseo:
+        name: "Ordenador del extractor del aseo"
+        description: "Enciende el extractor del aseo"
         display_categories: SMARTPLUG
