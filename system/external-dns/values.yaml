@@ -17,6 +17,8 @@ external-dns:
   sources:
   - service
   - ingress
+  - crd
+  
   domainFilters:
   - dbcloud.org
 

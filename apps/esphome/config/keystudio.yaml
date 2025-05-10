@@ -1,0 +1,196 @@
+esphome:
+  name: keystudio
+  friendly_name: keystudio
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret esphome_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret domain_devices
+
+# I2C bus for LCD and RFID modules
+i2c:
+  id: bus_i2c
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+
+# ——————————————
+# Display (LCD 1602 I²C)
+# ——————————————
+display:
+  - platform: lcd_pcf8574
+    dimensions: 16x2
+    address: 0x27         # Cambia a 0x3F si tu módulo usa esa dirección
+    update_interval: 1s
+    lambda: |-
+      it.printf(0, 0, "Temp: %.1f°C", id(living_room_temperature).state);
+      it.printf(0, 1, "Humidity: %.1f%%", id(living_room_humidity).state);
+
+# Sensors
+sensor:
+  - platform: dht
+    pin: GPIO17
+    temperature:
+      name: "Living Room Temperature"
+      id: living_room_temperature 
+    humidity:
+      name: "Living Room Humidity"
+      id: living_room_humidity
+    model: DHT11
+    update_interval: 60s
+
+  - platform: adc
+    pin: GPIO34
+    name: "Rain Sensor"
+    update_interval: 30s
+    attenuation: "12db"
+
+  - platform: adc
+    pin: GPIO35
+    name: "Gas Sensor"
+    update_interval: 30s
+    attenuation: "12db"
+
+# Binary Sensors
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode: INPUT
+    name: "PIR Motion Sensor"
+    device_class: motion
+
+  - platform: gpio
+    pin:
+      number: GPIO16
+      mode: INPUT_PULLUP
+    name: "Left Button"
+    on_press:
+      - logger.log: "Left button pressed"
+
+  - platform: gpio
+    pin:
+      number: GPIO27
+      mode: INPUT_PULLUP
+    name: "Right Button"
+    on_press:
+      - logger.log: "Right button pressed"
+
+output:
+  - platform: ledc
+    pin: GPIO5
+    id: servo_window
+
+  - platform: gpio
+    pin: GPIO12
+    id: yellow_led_pin
+
+  - platform: ledc
+    pin: GPIO13
+    id: servo_door
+
+  - platform: ledc
+    pin: GPIO18
+    id: pwm_motor_in1
+    frequency: 1000Hz
+
+  - platform: ledc
+    pin: GPIO19
+    id: pwm_motor_in2
+    frequency: 1000Hz
+    
+# LEDs and Lights
+light:
+  - platform: binary
+    name: "Yellow LED"
+    output: yellow_led_pin
+
+  - platform: fastled_clockless
+    chipset: WS2812
+    pin: GPIO26
+    num_leds: 4
+    rgb_order: GRB
+    name: "RGB LED"
+    effects:
+      - strobe:
+          name: Strobe Effect
+          colors:
+            - state: true
+              brightness: 100%
+              red: 100%
+              green: 0%
+              blue: 0%
+              duration: 500ms
+            - state: false
+              duration: 500ms
+
+# Actuators
+switch:
+  - platform: gpio
+    pin: GPIO25
+    id: buzzer
+    name: "Passive Buzzer"
+
+fan:
+  - platform: hbridge
+    name: "130 Motor Fan"
+    id: motor_fan
+    pin_a: pwm_motor_in1
+    pin_b: pwm_motor_in2
+    decay_mode: slow  # Opcional: slow = frenado suave, fast = apagado libre
+
+    # Velocidad mínima para que el motor gire (puedes ajustarlo)
+    speed_count: 100
+
+servo:
+  - id: window_servo
+    output: servo_window
+    min_level: 2.5%
+    max_level: 12.5%
+
+  - id: door_servo
+    output: servo_door
+    min_level: 2.5%
+    max_level: 12.5%
+
+number:
+  - platform: template
+    name: "Window Servo Angle"
+    id: window_angle
+    min_value: 0
+    max_value: 180
+    step: 1
+    set_action:
+      then:
+        - servo.write:
+            id: window_servo
+            level: !lambda 'return x / 180.0;'
+
+  - platform: template
+    name: "Door Servo Angle"
+    id: door_angle
+    min_value: 0
+    max_value: 180
+    step: 1
+    set_action:
+      then:
+        - servo.write:
+            id: door_servo
+            level: !lambda 'return x / 180.0;'
