@@ -1,9 +1,5 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "username": "renovate85-bot[bot]",
-    "repositories": [
-        "Daniel-Boluda/homelab"
-    ],
     "extends": [
         "config:recommended",
         ":dependencyDashboard",
