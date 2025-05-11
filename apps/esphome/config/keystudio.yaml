@@ -194,3 +194,20 @@ number:
         - servo.write:
             id: door_servo
             level: !lambda 'return x / 180.0;'
+
+external_components:
+  - source: "./uart_sr04m2"
+
+uart:
+  id: uart_sr04
+  rx_pin: GPIO33
+  baud_rate: 9600
+
+text_sensor:
+  - platform: custom
+    lambda: |-
+      auto sr04_sensor = new UartTextSensor(id(uart_sr04));
+      App.register_component(sr04_sensor);
+      return {sr04_sensor};
+    text_sensors:
+      name: "SR04M-2 Distance"
