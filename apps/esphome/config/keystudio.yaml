@@ -196,7 +196,11 @@ number:
             level: !lambda 'return x / 180.0;'
 
 external_components:
-  - source: "./uart_sr04m2"
+  - source:
+      type: git
+      url: "https://github.com/Daniel-Boluda/homelab"
+      ref: master
+      path: apps/esphome/config/uart_sr04m2
 
 uart:
   id: uart_sr04
