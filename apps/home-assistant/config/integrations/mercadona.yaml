@@ -1,0 +1,32 @@
+automation:
+  - alias: Lista de la compra Daniel
+    trigger:
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.mercadona
+        event: enter
+    condition: []
+    action:
+      - service: notify.mobile_app_sm_a256b
+        data:
+          message: "Quieres abrir la lista de la compra?"
+          title: "Lista de la compra"
+          data:
+            clickAction: "/shopping-list"
+    mode: single
+
+  - alias: Lista de la compra Lucia
+    trigger:
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.mercadona
+        event: enter
+    condition: []
+    action:
+      - service: notify.mobile_app_iphone_de_lucia
+        data:
+          message: "Daniel está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
+          title: "Lista de la compra"
+          data:
+            clickAction: "/shopping-list"
+    mode: single
