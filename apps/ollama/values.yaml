@@ -8,7 +8,8 @@ ollama:
         - llama3.2:3b
         - deepseek-coder-v2:16b
         - gemma3:12b
-      run: []
+      run:
+        - llama3.2:3b
 
   extraEnv:
     - name: NVIDIA_VISIBLE_DEVICES
