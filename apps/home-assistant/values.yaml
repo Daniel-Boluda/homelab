@@ -244,7 +244,7 @@ app-template:
         musicassistant:
           image:
             repository: ghcr.io/music-assistant/server
-            tag: 2.6.0b7
+            tag: 2.6.0b9
           env:
             LOG_LEVEL: info
           resources:
