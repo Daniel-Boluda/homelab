@@ -3,9 +3,13 @@ import requests
 import os
 from dotenv import load_dotenv
 
+
+# Load environment variables from .env file
+load_dotenv()
+
 # Configuración
 JELLYFIN_URL = os.getenv('JELLYFIN_URL')
-JELLYFIN_API_KEY = os.getenv('JELLYFIN_URL')
+JELLYFIN_API_KEY = os.getenv('JELLYFIN_API_KEY')
 
 # Puedes tener tantos grupos como quieras
 JELLYFIN_SYNC_GROUPS= json.loads(os.getenv('JELLYFIN_SYNC_GROUPS'))
