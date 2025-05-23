@@ -2,6 +2,7 @@ app-template:
   controllers:
     sonarr:
       labels:
+        app: sonarr
         backup/retain: quaterly
       type: statefulset
       containers:
@@ -78,7 +79,7 @@ app-template:
         http:
           port: *port
     metrics:
-      controller: metrics
+      controller: sonarr
       ports:
         metrics:
           port: *metrics_port
