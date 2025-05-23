@@ -1,3 +1,4 @@
+import json
 import requests
 import os
 from dotenv import load_dotenv
@@ -7,7 +8,7 @@ JELLYFIN_URL = os.getenv('JELLYFIN_URL')
 JELLYFIN_API_KEY = os.getenv('JELLYFIN_URL')
 
 # Puedes tener tantos grupos como quieras
-JELLYFIN_SYNC_GROUPS= os.getenv('JELLYFIN_SYNC_GROUPS')
+JELLYFIN_SYNC_GROUPS= json.loads(os.getenv('JELLYFIN_SYNC_GROUPS'))
 
 HEADERS = {
     "X-Emby-Token": JELLYFIN_API_KEY,

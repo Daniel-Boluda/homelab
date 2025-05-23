@@ -13,7 +13,7 @@ spec:
         spec:
           containers:
           - name: torrenttickarr-script
-            image: bolferdocker/pythonselenium:1.0.3
+            image: bolferdocker/pythonselenium:1.0.4
             command: ["sh", "-c", "python /scripts/jellysync_script.py"]
             volumeMounts:
             - name: script-volume
