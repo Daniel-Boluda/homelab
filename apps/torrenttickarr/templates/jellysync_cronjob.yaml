@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: torrenttickarr-script-cronjob
+  namespace: torrenttickarr
+spec:
+  schedule: "0 */12 * * *" # Every 12 hours
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: torrenttickarr-script
+            image: bolferdocker/pythonselenium:1.0.1
+            command: ["sh", "-c", "python /scripts/jellysync_script.py"]
+            volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+            env:
+            - name: JELLYFIN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: torrenttickarr-secrets
+                  key: JELLYFIN_URL
+            - name: JELLYFIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: torrenttickarr-secrets
+                  key: JELLYFIN_API_KEY
+            - name: JELLYFIN_SYNC_GROUPS
+              valueFrom:
+                secretKeyRef:
+                  name: torrenttickarr-secrets
+                  key: JELLYFIN_SYNC_GROUPS
+          volumes:
+          - name: script-volume
+            configMap:
+              name: python-script
+          restartPolicy: OnFailure

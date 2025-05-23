@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 QB_HOST = 'https://qbittorrent.internal.dbcloud.org/'
 QB_USERNAME = os.getenv('USERNAME_QB')
 QB_PASSWORD = os.getenv('PASSWORD_QB')
-DAYS_LIMIT = 14
+DAYS_LIMIT = os.getenv('DAYS_LIMIT_QB')
 
 def main():
     # Instantiate qBittorrent client
