@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: torrenttickarr-script-cronjob
+  name: jellysync-script-cronjob
   namespace: torrenttickarr
 spec:
   schedule: "0 */1 * * *" # Every 1 hours
