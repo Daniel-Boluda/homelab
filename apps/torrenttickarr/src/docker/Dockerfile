@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:v1.38.0-focal
+FROM mcr.microsoft.com/playwright/python:v1.48.0-focal
 
 COPY requirements.txt /app/requirements.txt
 WORKDIR /app
