@@ -21,7 +21,7 @@ automation:
       - platform: time
         at: "13:30:00"
     action:
-      - service: notify.mobile_app_sm_a256b
+      - service: notify.mobile_app_iphone_de_lucia
         data:
           title: "Hora de tomar tu píldora"
           message: "¿Ya tomaste tu píldora?"
@@ -43,7 +43,7 @@ automation:
       - service: input_boolean.turn_on
         target:
           entity_id: input_boolean.tomar_pildora
-      - service: notify.mobile_app_sm_a256b
+      - service: notify.mobile_app_iphone_de_lucia
         data:
           message: "✅ Píldora marcada como tomada."
       - service: notify.mobile_app_sm_a256b
@@ -63,7 +63,7 @@ automation:
         entity_id: input_boolean.tomar_pildora
         state: "off"
     action:
-      - service: notify.mobile_app_sm_a256b
+      - service: notify.mobile_app_iphone_de_lucia
         data:
           title: "Recordatorio"
           message: "Aún no marcaste como tomada tu píldora."
@@ -84,7 +84,7 @@ automation:
         entity_id: input_boolean.tomar_pildora
         state: "off"
     action:
-      - service: notify.mobile_app_sm_a256b
+      - service: notify.mobile_app_iphone_de_lucia
         data:
           message: "⚠️ No marcaste como tomada la píldora hoy."
       # notificar a Dani
@@ -106,7 +106,7 @@ automation:
           - condition: state
             entity_id: input_boolean.tomar_pildora
             state: "off"
-      - service: notify.mobile_app_sm_a256b
+      - service: notify.mobile_app_iphone_de_lucia
         data:
           title: "Recordatorio tardío"
           message: "Aún no has tomado tu píldora."
