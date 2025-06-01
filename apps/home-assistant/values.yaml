@@ -499,6 +499,14 @@ app-template:
         hass:
           hass:
           - path: /config/custom_components/stateful_pc
+    configmap-taskmanager:
+      enabled: true
+      type: configMap
+      name: home-assistant-config-taskmanager
+      advancedMounts:
+        hass:
+          hass:
+          - path: /config/custom_components/task_manager
     appdaemon:
       enabled: true
       type: configMap
