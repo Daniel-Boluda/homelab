@@ -26,25 +26,39 @@ wifi:
 
 # I2C bus for LCD and RFID modules
 i2c:
-  id: bus_i2c
-  sda: GPIO21
-  scl: GPIO22
-  scan: true
+  - id: bus_i2c
+    sda: GPIO21
+    scl: GPIO22
+    scan: true
+
+  - id: bus_i2c_sgp30  # nuevo bus para SGP30
+    sda: GPIO32
+    scl: GPIO33
+    scan: true
 
 # ——————————————
 # Display (LCD 1602 I²C)
 # ——————————————
 display:
   - platform: lcd_pcf8574
+    i2c_id: bus_i2c
     dimensions: 16x2
     address: 0x27         # Cambia a 0x3F si tu módulo usa esa dirección
-    update_interval: 1s
+    update_interval: 10s
     lambda: |-
       it.printf(0, 0, "Temp: %.1f°C", id(living_room_temperature).state);
       it.printf(0, 1, "Humidity: %.1f%%", id(living_room_humidity).state);
 
 # Sensors
 sensor:
+  - platform: sgp30
+    i2c_id: bus_i2c_sgp30
+    eco2:
+      name: "SGP30 eCO2"
+    tvoc:
+      name: "SGP30 TVOC"
+    update_interval: 2s
+
   - platform: dht
     pin: GPIO17
     temperature:
@@ -97,6 +111,7 @@ output:
   - platform: ledc
     pin: GPIO5
     id: servo_window
+    frequency: 50Hz  # servo PWM usual
 
   - platform: gpio
     pin: GPIO12
@@ -104,7 +119,8 @@ output:
 
   - platform: ledc
     pin: GPIO13
-    id: servo_door
+    id: servo_door    
+    frequency: 50Hz
 
   - platform: ledc
     pin: GPIO18
@@ -162,13 +178,13 @@ fan:
 servo:
   - id: window_servo
     output: servo_window
-    min_level: 2.5%
-    max_level: 12.5%
+    min_level: 0.05
+    max_level: 0.125
 
   - id: door_servo
     output: servo_door
-    min_level: 2.5%
-    max_level: 12.5%
+    min_level: 0.05
+    max_level: 0.125
 
 number:
   - platform: template
@@ -181,7 +197,7 @@ number:
       then:
         - servo.write:
             id: window_servo
-            level: !lambda 'return x / 180.0;'
+            level: !lambda 'return 1.0 - (x / 180.0);'
 
   - platform: template
     name: "Door Servo Angle"
@@ -194,24 +210,3 @@ number:
         - servo.write:
             id: door_servo
             level: !lambda 'return x / 180.0;'
-
-external_components:
-  - source:
-      type: git
-      url: "https://github.com/Daniel-Boluda/homelab"
-      ref: master
-      path: apps/esphome/config/uart_sr04m2
-
-uart:
-  id: uart_sr04
-  rx_pin: GPIO33
-  baud_rate: 9600
-
-text_sensor:
-  - platform: custom
-    lambda: |-
-      auto sr04_sensor = new UartTextSensor(id(uart_sr04));
-      App.register_component(sr04_sensor);
-      return {sr04_sensor};
-    text_sensors:
-      name: "SR04M-2 Distance"
