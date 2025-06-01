@@ -1,0 +1,12 @@
+{
+  "domain": "task_manager",
+  "name": "Task Manager",
+  "version": "1.0.1",
+  "documentation": "https://example.com/task-manager",
+  "dependencies": [],
+  "codeowners": [
+    "@tu_usuario"
+  ],
+  "requirements": [],
+  "config_flow": true
+}

@@ -1,0 +1,18 @@
+mark_done:
+  description: Marca la tarea como completada
+  fields:
+    task_id:
+      description: ID de la tarea
+      example: "clean_kitchen"
+
+mark_skipped:
+  description: Marca la tarea como omitida
+  fields:
+    task_id:
+      description: ID de la tarea
+
+remind_later:
+  description: Envia recordatorio en 1h
+  fields:
+    task_id:
+      description: ID de la tarea
