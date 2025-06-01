@@ -1,0 +1,64 @@
+import asyncio
+from playwright.async_api import async_playwright
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+GITHUB_USERNAME = os.getenv('GITHUB_USERNAME')
+GITHUB_PASSWORD = os.getenv('GITHUB_PASSWORD')  # Si tienes 2FA, usa un token de acceso personal aquí
+REPO = "Daniel-Boluda/homelab"
+ISSUE_TITLE = "Dependency Dashboard"
+
+async def main():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False, slow_mo=200)
+        page = await browser.new_page()
+
+        # 1. Login en GitHub
+        await page.goto("https://github.com/login")
+        await page.fill('input[name="login"]', GITHUB_USERNAME)
+        await page.fill('input[name="password"]', GITHUB_PASSWORD)
+        await page.click('input[type="submit"]')
+
+        while True:
+            # 2. Ir a la lista de issues cerrados con ese título
+            issues_url = f"https://github.com/{REPO}/issues?q=is%3Aissue+is%3Aclosed"
+            await page.goto(issues_url)
+
+            # Recoge todos los enlaces de issues con el título correcto
+            issue_links = await page.query_selector_all('a[data-testid="issue-pr-title-link"]')
+            issue_urls = []
+            for link in issue_links:
+                # title = await link.inner_text()
+                # if title.strip() == ISSUE_TITLE:
+                issue_url = await link.get_attribute("href")
+                issue_urls.append(issue_url)
+
+            if not issue_urls:
+                print("No more issues found.")
+                break
+
+            for issue_url in issue_urls:
+                print(f"Borrando issue: {issue_url}")
+                await page.goto(f"https://github.com{issue_url}")
+
+                # Click en el botón de borrar (icono papelera)
+                delete_button = await page.query_selector('button:has(svg.octicon-trash)')
+                if delete_button:
+                    await delete_button.click()
+                    await page.wait_for_timeout(100)
+                    # Confirmar borrado (nuevo botón "Delete")
+                    confirm_button = await page.query_selector('button:has-text("Delete")')
+                    if confirm_button:
+                        await confirm_button.click()
+                        await page.wait_for_timeout(100)
+                    else:
+                        print("No se encontró el botón de confirmación de borrado.")
+                else:
+                    print("No se encontró el botón de borrar en este issue.")
+
+        await browser.close()
+
+asyncio.run(main())
