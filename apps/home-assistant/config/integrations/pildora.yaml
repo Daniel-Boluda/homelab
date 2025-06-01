@@ -96,7 +96,7 @@ automation:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
                   message: "✅ Has marcado tu píldora como tomada."
-              - service: notify.mobile_app_iphone_de_lucia
+              - service: notify.mobile_app_sm_a256b
                 data:
                   message: "✅ Lucia ha tomado su pildora."
 
