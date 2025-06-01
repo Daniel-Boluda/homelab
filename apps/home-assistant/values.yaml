@@ -11,7 +11,7 @@ app-template:
         hass:
           image:
             repository: ghcr.io/home-operations/home-assistant
-            tag: 2025.5.1@sha256:020eecfb33fbc8473a54d24607e0352d4381af51d9963cfa70b7b915115da2d1
+            tag: 2025.5.3@sha256:a480637f5064050f27e053a756ef2083b4346656e7c15713b574cfb1a9bbf3af
           env:
             TZ: Europe/Madrid
             POSTGRES_USER:
@@ -157,7 +157,7 @@ app-template:
         piper:
           image:
             repository: rhasspy/wyoming-piper
-            tag: 1.5.0
+            tag: 1.5.4
           args:
             - --voice
             #- en_US-amy-medium
@@ -244,7 +244,7 @@ app-template:
         musicassistant:
           image:
             repository: ghcr.io/music-assistant/server
-            tag: 2.6.0b7
+            tag: 2.6.0b9
           env:
             LOG_LEVEL: info
           resources:
