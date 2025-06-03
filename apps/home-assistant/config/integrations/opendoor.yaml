@@ -1,45 +1,42 @@
 automation:
-  - alias: Turn on entrance light when door opens
+  - alias: Gestión completa puerta entrada
+    description: Enciende luz al abrir la puerta, apaga tras 2 minutos y envía notificaciones al abrir y cerrar
     trigger:
       - platform: state
         entity_id: binary_sensor.puerta_entrada
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: switch.luz_entrada
-        state: "off"
+    condition: []
     action:
-      - service: switch.turn_on
-        target:
-          entity_id: switch.luz_entrada
-      - delay:
-          seconds: 120
-      - service: switch.turn_off
-        target:
-          entity_id: switch.luz_entrada
-
-  - alias: Notify when door opens
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.puerta_entrada
-        to: "on"
-    action:
-      - service: notify.mobile_app_sm_a256b
-        data:
-          message: "Se ha abierto la puerta de la entrada!"
-      - service: notify.mobile_app_iphone_de_lucia
-        data:
-          message: "Se ha abierto la puerta de la entrada!"
-
-  - alias: Notify when door closes
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.puerta_entrada
-        to: "off"
-    action:
-      - service: notify.mobile_app_sm_a256b
-        data:
-          message: "Se ha cerrado la puerta de la entrada!"
-      - service: notify.mobile_app_iphone_de_lucia
-        data:
-          message: "Se ha cerrado la puerta de la entrada!"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puerta_entrada
+                state: "on"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Se ha abierto la puerta de la entrada!"
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Se ha abierto la puerta de la entrada!"
+              - condition: state
+                entity_id: switch.luz_entrada
+                state: "off"
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.luz_entrada
+              - delay:
+                  seconds: 120
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.luz_entrada
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.puerta_entrada
+                state: "off"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Se ha cerrado la puerta de la entrada!"
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Se ha cerrado la puerta de la entrada!"

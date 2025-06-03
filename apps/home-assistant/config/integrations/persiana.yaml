@@ -1,0 +1,60 @@
+alias: Control persianas
+description: Sube al 40% a las 13:00 y la abre a las 21:00, cierra dormitorio a las 23:00
+mode: single
+trigger:
+  - platform: time
+    at: "13:00:00"
+  - platform: time
+    at: "21:00:00"
+  - platform: time
+    at: "23:00:00"
+condition: []
+action:
+  - choose:
+      - conditions:
+          - condition: time
+            at: "13:00:00"
+        sequence:
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_despacho
+            data:
+              position: 40
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_dormitorio
+            data:
+              position: 40
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_invitados
+            data:
+              position: 40
+      - conditions:
+          - condition: time
+            at: "20:00:00"
+        sequence:
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_despacho
+            data:
+              position: 100
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_dormitorio
+            data:
+              position: 100
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_invitados
+            data:
+              position: 100
+      - conditions:
+          - condition: time
+            at: "23:00:00"
+        sequence:
+          - service: cover.set_cover_position
+            target:
+              entity_id: cover.persiana_dormitorio
+            data:
+              position: 0
