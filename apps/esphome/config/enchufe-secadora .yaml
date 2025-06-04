@@ -1,5 +1,5 @@
 esphome:  
-  name: secadora  
+  name: enchufe-secadora  
   platformio_options:  
     board_build.flash_mode: dio  
   on_boot:
@@ -22,7 +22,7 @@ wifi:
   password: !secret wifi_password
   domain: !secret domain_devices
   ap:
-    ssid: "Test Fallback Hotspot"
+    ssid: "Esphome Fallback Hotspot"
     password: !secret wifi_password
 
 ota:
