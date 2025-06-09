@@ -23,7 +23,7 @@ automation:
                 target:
                   entity_id: cover.persiana_despacho
                 data:
-                  position: 40
+                  position: 60
               - service: cover.set_cover_position
                 target:
                   entity_id: cover.persiana_dormitorio
