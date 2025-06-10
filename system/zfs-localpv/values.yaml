@@ -21,3 +21,6 @@ zfs-localpv:
     snapshotController:
       extraArgs:
         - -v=1
+
+  backupGC:
+    enabled: true
