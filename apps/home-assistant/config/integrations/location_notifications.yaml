@@ -1,37 +1,30 @@
 automation:
   - alias: Notificaciones ubicaciones clave con presencia
     trigger:
-      # Dani llega a Supera_Rivas
       - platform: zone
         entity_id: person.daniel_boluda_fdez_gmail_com
         zone: zone.supera_rivas
         event: enter
-      # Lucia llega a Supera_Rivas
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.supera_rivas
         event: enter
-      # Dani llega a Badminton
       - platform: zone
         entity_id: person.daniel_boluda_fdez_gmail_com
         zone: zone.badminton
         event: enter
-      # Dani llega a Home
       - platform: zone
         entity_id: person.daniel_boluda_fdez_gmail_com
         zone: zone.home
         event: enter
-      # Lucia llega a Home
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.home
         event: enter
-      # Lucia llega al Hospital GU
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.hospital_gu
         event: enter
-      # Lucia se va del Hospital GU
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.hospital_gu
@@ -39,13 +32,13 @@ automation:
     condition: []
     action:
       - choose:
-          # Dani llega a Supera_Rivas
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.daniel_boluda_fdez_gmail_com
-                zone: zone.supera_rivas
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.supera_rivas' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -56,13 +49,14 @@ automation:
                 data:
                   message: "Daniel ha llegado a Supera Rivas."
                   title: "Ubicación"
-          # Lucia llega a Supera_Rivas
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.pizarroservanlucia_gmail_com
-                zone: zone.supera_rivas
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.supera_rivas' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -73,13 +67,14 @@ automation:
                 data:
                   message: "Lucía ha llegado a Supera Rivas."
                   title: "Ubicación"
-          # Dani llega a Badminton
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.daniel_boluda_fdez_gmail_com
-                zone: zone.badminton
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.badminton' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -90,13 +85,14 @@ automation:
                 data:
                   message: "Daniel ha llegado a Badminton."
                   title: "Ubicación"
-          # Dani llega a Home
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.daniel_boluda_fdez_gmail_com
-                zone: zone.home
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.home' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -107,13 +103,14 @@ automation:
                 data:
                   message: "Daniel ha llegado a casa."
                   title: "Ubicación"
-          # Lucia llega a Home
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.pizarroservanlucia_gmail_com
-                zone: zone.home
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.home' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -124,13 +121,14 @@ automation:
                 data:
                   message: "Lucía ha llegado a casa."
                   title: "Ubicación"
-          # Lucia llega al Hospital GU
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.pizarroservanlucia_gmail_com
-                zone: zone.hospital_gu
-                event: enter
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
@@ -141,13 +139,14 @@ automation:
                 data:
                   message: "Lucía ha llegado al Hospital GU."
                   title: "Ubicación"
-          # Lucia se va del Hospital GU
+
           - conditions:
-              - condition: trigger
-                platform: zone
-                entity_id: person.pizarroservanlucia_gmail_com
-                zone: zone.hospital_gu
-                event: leave
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.event == 'leave' }}
               - condition: not
                 conditions:
                   - condition: state
