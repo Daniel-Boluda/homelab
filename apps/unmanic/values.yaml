@@ -32,7 +32,14 @@ app-template:
               nvidia.com/gpu: "1"
           probes:
             liveness:
-              enabled: true
+            enabled: true
+            spec:
+              exec:
+                command:
+                  - nvidia-smi
+              initialDelaySeconds: 30
+              periodSeconds: 60
+              failureThreshold: 2
             readiness:
               enabled: true
             startup:
