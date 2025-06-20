@@ -26,7 +26,7 @@ extraEnvVars:
 - name: KC_HTTP_RELATIVE_PATH
   value: "/"
 - name: KEYCLOAK_PROVIDERS_PATH
-value: /opt/bitnami/keycloak/providers/custom
+  value: /opt/bitnami/keycloak/providers/custom
 #- name: KC_PROXY
 #  value: "edge"
 #- name: KC_HOSTNAME_URL
