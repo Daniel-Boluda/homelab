@@ -59,16 +59,9 @@ extraVolumes:
 - name: shared
   emptyDir: {}
 
-- name: keycloak-providers
-  persistentVolumeClaim:
-    claimName: keycloak-providers
-
 extraVolumeMounts:
 - mountPath: /shared
   name: shared
-
-- name: keycloak-providers
-  mountPath: /opt/bitnami/keycloak/providers/custom
 
 initdbScripts:
   load_custom_provider_script.sh: |
