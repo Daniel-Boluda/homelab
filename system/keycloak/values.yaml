@@ -48,7 +48,7 @@ tls:
 # https://www.keycloak.org/server/reverseproxy
 
 # we want traffic from Ingress to backend to be with SSL termination
-# proxy: reencrypt
+proxyHeaders: xforwarded
 
 extraContainerPorts:
 - name: admin
