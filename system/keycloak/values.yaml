@@ -25,6 +25,8 @@ extraEnvVars:
   value: "true"
 - name: KC_HTTP_RELATIVE_PATH
   value: "/"
+- name: KEYCLOAK_PROVIDERS_PATH
+value: /opt/bitnami/keycloak/providers/custom
 #- name: KC_PROXY
 #  value: "edge"
 #- name: KC_HOSTNAME_URL
@@ -66,8 +68,7 @@ extraVolumeMounts:
   name: shared
 
 - name: keycloak-providers
-  mountPath: /opt/bitnami/keycloak/providers
-  subPath: providers
+  mountPath: /opt/bitnami/keycloak/providers/custom
 
 initdbScripts:
   load_custom_provider_script.sh: |
