@@ -74,7 +74,7 @@ initdbScripts:
   load_custom_provider_script.sh: |
     #!/bin/bash
     echo "load_custom_provider_script.sh"
-    curl -sS https://github.com/sventorben/keycloak-restrict-client-auth/releases/download/v26.1.0/keycloak-restrict-client-auth.jar -o /opt/bitnami/keycloak/providers/keycloak-restrict-client-auth.jar
+    curl -sS https://github.com/sventorben/keycloak-restrict-client-auth/releases/download/v26.1.0/keycloak-restrict-client-auth.jar -o /opt/bitnami/keycloak/providers/custom/keycloak-restrict-client-auth.jar
 
 replicaCount: 1
 resources:
