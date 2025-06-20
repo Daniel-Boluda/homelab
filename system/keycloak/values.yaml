@@ -65,8 +65,9 @@ extraVolumeMounts:
 - mountPath: /shared
   name: shared
 
-- mountPath: /opt/bitnami/keycloak/providers
-  name: keycloak-providers
+- name: keycloak-providers
+  mountPath: /opt/bitnami/keycloak/providers
+  subPath: providers
 
 initdbScripts:
   load_custom_provider_script.sh: |
