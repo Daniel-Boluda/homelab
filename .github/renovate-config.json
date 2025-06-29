@@ -13,9 +13,6 @@
   "rebaseWhen": "conflicted",
   "commitMessagePrefix": "{{parentDir}}: ",
   "timezone": "Europe/Madrid",
-  "schedule": [
-    "after 4am and before 10pm daily"
-  ],
   "enabledManagers": [
     "argocd",
     "github-actions",
@@ -31,12 +28,12 @@
     "branchPrefix": "pre-commit-"
   },
   "configMigration": true,
-  "regexManagers": [
+  "customManagers": [
     {
-      "fileMatch": ["\\.ya?ml$"],
-      "matchStrings": [
-        "image:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)"
-      ],
+      "customType": "regex",
+      "description": "Process custom dependencies",
+      "managerFilePatterns": ["/.+\\.ya?ml$/"],
+      "matchStrings": ["image:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)"],
       "datasourceTemplate": "docker",
       "depNameTemplate": "{{depName}}",
       "versioningTemplate": "semver"
@@ -50,7 +47,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "matchUpdateTypes": ["minor","patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
@@ -70,13 +67,13 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["nextcloud","redis"],
+      "matchPackageNames": ["nextcloud", "redis"],
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "30 days"
     },
     {
       "matchDatasources": ["docker"],
-      "matchUpdateTypes": ["minor","patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "ignoreTests": true,
@@ -98,12 +95,12 @@
         "registry.k8s.io/sig-storage/csi-snapshotter"
       ],
       "matchManagers": ["regex"],
-      "matchUpdateTypes": ["major","minor"],
+      "matchUpdateTypes": ["major", "minor"],
       "minimumReleaseAge": "30 days"
     },
     {
       "matchDatasources": ["helm"],
-      "matchUpdateTypes": ["minor","patch"],
+      "matchUpdateTypes": ["minor", "patch"],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "automergeType": "pr",
@@ -113,7 +110,7 @@
     {
       "matchPackageNames": ["k3s-io/k3s"],
       "matchManagers": ["regex"],
-      "matchUpdateTypes": ["major","minor"],
+      "matchUpdateTypes": ["major", "minor"],
       "minimumReleaseAge": "120 days",
       "groupName": "k3s upgrade",
       "additionalBranchPrefix": "k3s-",
@@ -122,7 +119,7 @@
     {
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["minor"],
-      "matchPackageNames": ["/kanidm/","/appdaemon/"],
+      "matchPackageNames": ["/kanidm/", "/appdaemon/"],
       "matchCurrentVersion": "!/^0/",
       "automerge": false,
       "ignoreTests": false,
