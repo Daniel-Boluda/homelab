@@ -207,7 +207,7 @@ spec:
           oidc_discovery_url: https://keycloak.dbcloud.org/realms/master
           oidc_client_id: vault
           oidc_client_secret: "${env `OIDC_CLIENT_SECRET`}"
-          default_role: admin
+          default_role: Default
           jwt_supported_algs:
             - ES256
         roles:
