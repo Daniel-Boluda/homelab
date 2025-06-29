@@ -211,7 +211,7 @@ spec:
           jwt_supported_algs:
             - ES256
         roles:
-          - name: default
+          - name: Default
             allowed_redirect_uris:
               - https://vault.internal.dbcloud.org/ui/vault/auth/oidc/oidc/callback
               - http://localhost:8250/oidc/callback
