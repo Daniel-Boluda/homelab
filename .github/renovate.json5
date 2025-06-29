@@ -13,9 +13,7 @@
   rebaseWhen: 'conflicted',
   commitMessagePrefix: '{{parentDir}}: ',
   timezone: 'Europe/Madrid',
-  schedule: [
-    'after 4am and before 11pm on Sunday',
-  ],
+  schedule: [],
   enabledManagers: [
     'argocd',
     'github-actions',
