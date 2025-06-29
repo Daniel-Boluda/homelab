@@ -33,6 +33,13 @@ app-template:
           probes:
             liveness:
               enabled: true
+              spec:
+                exec:
+                  command:
+                    - nvidia-smi
+                initialDelaySeconds: 30
+                periodSeconds: 60
+                failureThreshold: 2
             readiness:
               enabled: true
             startup:

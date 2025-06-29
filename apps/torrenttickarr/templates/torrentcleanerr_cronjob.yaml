@@ -13,8 +13,8 @@ spec:
         spec:
           containers:
           - name: torrentcleanerr-script
-            image: bolferdocker/pythonselenium:1.0.2
-            command: ["sh", "-c", "python /scripts/torrentcleanerr_script.py"]
+            image: bolferdocker/pythonplaywright:1.0.6
+            command: ["python", "/scripts/torrentcleanerr_script.py"]
             volumeMounts:
             - name: script-volume
               mountPath: /scripts

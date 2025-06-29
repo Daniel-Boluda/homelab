@@ -14,7 +14,7 @@
   commitMessagePrefix: '{{parentDir}}: ',
   timezone: 'Europe/Madrid',
   schedule: [
-    'after 4am and before 10am on Monday',
+    'after 4am and before 11pm on Sunday',
   ],
   enabledManagers: [
     'argocd',
@@ -116,21 +116,6 @@
         'docker',
       ],
       matchUpdateTypes: [
-        'minor',
-      ],
-      matchPackageNames: [
-        'kanidm',
-      ],
-      matchCurrentVersion: '!/^0/',
-      automerge: false,
-      ignoreTests: false,
-      platformAutomerge: false,
-    },
-    {
-      matchDatasources: [
-        'docker',
-      ],
-      matchUpdateTypes: [
         'digest',
       ],
       automerge: true,
@@ -186,6 +171,22 @@
       ],
     },
     {
+      matchDatasources: [
+        'docker',
+      ],
+      matchUpdateTypes: [
+        'minor',
+      ],
+      matchPackageNames: [
+        '/kanidm/',
+        '/appdaemon/',
+      ],
+      matchCurrentVersion: '!/^0/',
+      automerge: false,
+      ignoreTests: false,
+      platformAutomerge: false,
+    },
+    {
       description: 'Group k3s changes in one PR',
       matchPackageNames: [
         'k3s-io/k3s',
@@ -214,6 +215,7 @@
       matchPackageNames: [
         '/app-template/',
       ],
+      commitMessagePrefix: 'app-template: ',
     },
   ],
 }

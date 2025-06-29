@@ -1,0 +1,120 @@
+input_boolean:
+  pildora_lucia_taken:
+    name: Píldora Lucía tomada
+    icon: mdi:pill
+
+automation:
+  - alias: "pildora Lucia Gestión completa"
+    id: "pildora_lucia_gestion_completa"
+    trigger:
+      # 1) Reset diario a las 02:00
+      - platform: time
+        at: "02:00:00"
+        id: "daily_reset"
+
+      # 2) Cada 15 min (incluye 13:30, 13:45, …, 18:00, 18:15, …)
+      - platform: time_pattern
+        minutes: "/15"
+        id: "every_15"
+
+      # 3) Evento “Ya la tomé”
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "PILDORA_TAKEN"
+        id: "taken_event"
+
+      # 4) Evento “No puedo tomarla”
+      - platform: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: "CANNOT_TAKE"
+        id: "cannot_event"
+
+    action:
+      - choose:
+          # ---------- Bloque "daily_reset" ----------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'daily_reset' }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.pildora_lucia_taken
+              - service: automation.turn_on
+                target:
+                  entity_id: automation.pildora_lucia_gestion_completa
+              # Al resetear, nos aseguramos de que la misma automatización
+              # podrá volver a enviar recordatorios tras las 02:00.
+
+          # ---------- Bloque "every_15" para notificar a Lucía entre 13:30 y 18:00 ----------
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ 
+                    trigger.id == 'every_15' and 
+                    (now().hour > 13 or (now().hour == 13 and now().minute >= 30)) and 
+                    now().hour < 24 and 
+                    is_state('input_boolean.pildora_lucia_taken', 'off') 
+                  }}
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  title: "Recordatorio: tomar píldora"
+                  message: "¿Ya tomaste tu píldora?"
+                  data:
+                    actions:
+                      - action: "PILDORA_TAKEN"
+                        title: "Ya la tomé"
+                      - action: "CANNOT_TAKE"
+                        title: "No puedo tomarla"
+
+          # ---------- Bloque "every_15" para notificar a Daniel después de las 18:00 ----------
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ 
+                    trigger.id == 'every_15' and 
+                    now().hour >= 18 and 
+                    now().hour < 24 and
+                    is_state('input_boolean.pildora_lucia_taken', 'off') 
+                  }}
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  title: "Alerta: píldora no tomada"
+                  message: "Lucía aún no ha tomado su píldora hoy."
+
+          # ---------- Bloque "taken_event" (Lucía pulsa “Ya la tomé”) ----------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'taken_event' }}"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.pildora_lucia_taken
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "✅ Has marcado tu píldora como tomada."
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "✅ Lucia ha tomado su pildora."
+
+          # ---------- Bloque "cannot_event" (Lucía pulsa “No puedo tomarla”) ----------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'cannot_event' }}"
+            sequence:
+              - service: automation.turn_off
+                target:
+                  entity_id: automation.pildora_lucia_gestion_completa
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "👍 Entendido, hoy no podrás tomar tu píldora. No recibirás más recordatorios."
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  title: "Aviso: Píldora Lucía"
+                  message: "Lucía ha indicado que no podrá tomar su píldora hoy."
+
+        default: []
+

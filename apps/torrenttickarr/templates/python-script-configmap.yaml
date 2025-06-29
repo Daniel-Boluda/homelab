@@ -5,6 +5,8 @@ metadata:
   namespace: torrenttickarr
 data:
   torrenttickarr_script.py: |-
-{{ .Files.Get "src/torrenttickarr_script.py" | nindent 4 }}
+{{ .Files.Get "src/torrenttickarr_script.py" | indent 4 }}
   torrentcleanerr_script.py: |-
-{{ .Files.Get "src/torrentcleanerr_script.py" | nindent 4 }}
+{{ .Files.Get "src/torrentcleanerr_script.py" | indent 4 }}
+  jellysync_script.py: |-
+{{ .Files.Get "src/jellysync_script.py" | indent 4 }}

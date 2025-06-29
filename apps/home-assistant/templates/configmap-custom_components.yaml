@@ -13,3 +13,11 @@ metadata:
 data:
 # this removes subdirectories hiterarchy
 {{ (.Files.Glob "config/custom_components/stateful_pc/*").AsConfig | indent 2 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-assistant-config-taskmanager
+data:
+# this removes subdirectories hiterarchy
+{{ (.Files.Glob "config/custom_components/task_manager/*").AsConfig | indent 2 }}

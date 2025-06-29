@@ -11,7 +11,7 @@ app-template:
         hass:
           image:
             repository: ghcr.io/home-operations/home-assistant
-            tag: 2025.5.1@sha256:020eecfb33fbc8473a54d24607e0352d4381af51d9963cfa70b7b915115da2d1
+            tag: 2025.5.3@sha256:a480637f5064050f27e053a756ef2083b4346656e7c15713b574cfb1a9bbf3af
           env:
             TZ: Europe/Madrid
             POSTGRES_USER:
@@ -157,7 +157,7 @@ app-template:
         piper:
           image:
             repository: rhasspy/wyoming-piper
-            tag: 1.5.0
+            tag: 1.5.4
           args:
             - --voice
             #- en_US-amy-medium
@@ -237,6 +237,32 @@ app-template:
                 failureThreshold: 30
                 periodSeconds: 5
 
+    musicassistant:
+      type: deployment
+      replicas: 1
+      containers:
+        musicassistant:
+          image:
+            repository: ghcr.io/music-assistant/server
+            tag: 2.6.0b9
+          env:
+            LOG_LEVEL: info
+          resources:
+            requests:
+              cpu: 15m
+              memory: 150Mi
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
+
+
   defaultPodOptions:
     terminationGracePeriodSeconds: 1
 
@@ -302,6 +328,11 @@ app-template:
           port: 8971
         rtsp:
           port: 8554
+    musicassistant:
+      controller: musicassistant
+      ports:
+        http:
+          port: 8095
 
   ingress:
     hass:
@@ -365,7 +396,7 @@ app-template:
         - hosts:
             - *host
           secretName: hass-appdaemon-tls-certificate
-          
+
     frigate:
       enabled: true
       className: nginx-external
@@ -388,6 +419,29 @@ app-template:
         - hosts:
             - *host
           secretName: hass-frigate-tls-certificate
+
+    musicassistant:
+      enabled: true
+      className: nginx-external
+      annotations:
+        external-dns.alpha.kubernetes.io/enabled: "true"
+        external-dns.alpha.kubernetes.io/target: dbcloud.org
+        cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+        nginx.ingress.kubernetes.io/auth-url: https://auth.dbcloud.org/oauth2/auth?allowed_groups=appdaemonUsers
+        nginx.ingress.kubernetes.io/auth-signin: https://auth.dbcloud.org/oauth2/start
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      hosts:
+        - host: &host musicassistant.dbcloud.org
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: musicassistant
+                port: http
+      tls:
+        - hosts:
+            - *host
+          secretName: hass-musicassistant-tls-certificate
 
   persistence:
     config:
@@ -445,6 +499,14 @@ app-template:
         hass:
           hass:
           - path: /config/custom_components/stateful_pc
+    configmap-taskmanager:
+      enabled: true
+      type: configMap
+      name: home-assistant-config-taskmanager
+      advancedMounts:
+        hass:
+          hass:
+          - path: /config/custom_components/task_manager
     appdaemon:
       enabled: true
       type: configMap
@@ -514,6 +576,13 @@ app-template:
         frigate:
           01-init-config:
             - path: /config/config.yaml
+    musicassistant-files:
+      enabled: true
+      existingClaim: musicassistant-files
+      advancedMounts:
+        musicassistant:
+          musicassistant:
+            - path: /data
 
   serviceMonitor:
     hass:

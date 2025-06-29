@@ -68,6 +68,10 @@ minio:
     existingSecret: minio-users
     existingSecretKey: veleroPassword
     policy: readwrite
+  - accessKey: homeassistant
+    existingSecret: minio-users
+    existingSecretKey: hassPassword
+    policy: readwrite
   ## Username, password and policy to be assigned to the user
   ## Default policies are [readonly|readwrite|writeonly|consoleAdmin|diagnostics]
   ## Add new policies as explained here https://min.io/docs/minio/kubernetes/upstream/administration/identity-access-management.html#access-management
@@ -111,6 +115,14 @@ minio:
   #   # set objectlocking for
   #   # bucket [true|false] NOTE: versioning is enabled by default if you use locking
   #   objectlocking: false
+  - name: homeassistant
+    # Policy to be set on the
+    # bucket [none|download|upload|public]
+    policy: none
+    # Purge if bucket exists already
+    purge: false
+    versioning: false
+    objectlocking: false
 
   environment:
     MINIO_IDENTITY_OPENID_ROLE_POLICY: consoleAdmin

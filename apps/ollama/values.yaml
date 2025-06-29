@@ -4,11 +4,12 @@ ollama:
       enabled: true
       type: 'nvidia'
     models:
-      pull: []
-        # - llama3.2:3b
-        # - deepseek-coder-v2:16b
-        # - gemma3:12b
-      run: []
+      pull:
+        - llama3.2:3b
+        - deepseek-coder-v2:16b
+        - gemma3:12b
+      run:
+        - llama3.2:3b
 
   extraEnv:
     - name: NVIDIA_VISIBLE_DEVICES
@@ -46,10 +47,10 @@ ollama:
   podLabels:
     runtime-class: nvidia
   podSecurityContext:
-    fsGroup: 0
-    runAsGroup: 0
-    runAsNonRoot: false
-    runAsUser: 0
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
     fsGroupChangePolicy: "OnRootMismatch"
   securityContext:
     runAsNonRoot: false

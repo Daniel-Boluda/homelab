@@ -1,0 +1,66 @@
+automation:
+  - alias: Gestion lista de la compra con notificación selectiva
+    trigger:
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.mercadona
+        event: enter
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.mercadona
+        event: enter
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.mercadona' and
+                     trigger.event == 'enter' }}
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "¿Quieres abrir la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.pizarroservanlucia_gmail_com
+                    state: "zone.mercadona"
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Daniel está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.mercadona' and
+                     trigger.event == 'enter' }}
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "¿Quieres abrir la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.mercadona"
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+    mode: single

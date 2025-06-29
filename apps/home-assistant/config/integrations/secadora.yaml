@@ -1,0 +1,67 @@
+input_datetime:
+  secadora_last_notification:
+    name: Última notificación secadora
+    has_date: true
+    has_time: true
+
+automation:
+  - alias: Gestión completa secadora (sin timer)
+    description: Detecta fin de secado, y recuerda avisar cada 30 min si sigue encendida
+    trigger:
+      - platform: state
+        entity_id: sensor.enchufe_secadora_relay_power
+    condition: []
+    action:
+      - variables:
+          power: "{{ states('sensor.enchufe_secadora_relay_power') | float(0) }}"
+          last_notification: "{{ state_attr('input_datetime.secadora_last_notification','timestamp') | int(0) }}"
+          now_ts: "{{ now().timestamp() | int(0) }}"
+      - choose:
+          # --- Caso 1: Paso de secando (>10) a encendida (2-10), con espera 30 s ---
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.from_state and trigger.to_state and
+                     (trigger.from_state.state | float(0) > 10) and
+                     (trigger.to_state.state | float(0) >= 2 and trigger.to_state.state | float(0) <= 10) }}
+            sequence:
+              - wait_template: >
+                  {{ states('sensor.enchufe_secadora_relay_power') | float(0) >= 2 and states('sensor.enchufe_secadora_relay_power') | float(0) <= 10 }}
+                timeout: "00:00:30"
+                continue_on_timeout: true
+              - condition: template
+                value_template: >
+                  {{ states('sensor.enchufe_secadora_relay_power') | float(0) >= 2 and states('sensor.enchufe_secadora_relay_power') | float(0) <= 10 }}
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "⚠️ La secadora ha terminado de secar pero sigue encendida."
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "⚠️ La secadora ha terminado de secar pero sigue encendida."
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.secadora_last_notification
+                data:
+                  timestamp: "{{ now().timestamp() }}"
+
+          # --- Caso 2: Sigue encendida sin secar (>2 y <=10), avisar cada 30 min ---
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.enchufe_secadora_relay_power
+                above: 2
+                below: 10
+              - condition: template
+                value_template: >
+                  {{ (now_ts - last_notification) > 1800 }}   # 1800 segundos = 30 min
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "⏳ La secadora sigue encendida sin funcionar desde hace más de 30 minutos."
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "⏳ La secadora sigue encendida sin funcionar desde hace más de 30 minutos."
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.secadora_last_notification
+                data:
+                  timestamp: "{{ now().timestamp() }}"

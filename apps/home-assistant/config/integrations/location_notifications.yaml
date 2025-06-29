@@ -1,0 +1,160 @@
+automation:
+  - alias: Notificaciones ubicaciones clave con presencia
+    trigger:
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.supera_rivas
+        event: enter
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.supera_rivas
+        event: enter
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.badminton
+        event: enter
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.home
+        event: enter
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.home
+        event: enter
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.hospital_gu
+        event: enter
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.hospital_gu
+        event: leave
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.supera_rivas' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.pizarroservanlucia_gmail_com
+                    state: "zone.supera_rivas"
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Daniel ha llegado a Supera Rivas."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.supera_rivas' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.supera_rivas"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía ha llegado a Supera Rivas."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.badminton' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.pizarroservanlucia_gmail_com
+                    state: "zone.badminton"
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Daniel ha llegado a Badminton."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
+                     trigger.zone == 'zone.home' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.pizarroservanlucia_gmail_com
+                    state: "zone.home"
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Daniel ha llegado a casa."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.home' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.home"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía ha llegado a casa."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.event == 'enter' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.hospital_gu"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía ha llegado al Hospital GU."
+                  title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.platform == 'zone' and
+                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
+                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.event == 'leave' }}
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.hospital_gu"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía ha salido del Hospital GU."
+                  title: "Ubicación"
+    mode: single
