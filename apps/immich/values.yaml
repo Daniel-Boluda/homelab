@@ -29,7 +29,7 @@ app-template:
   controllers:
     server:
       strategy: RollingUpdate
-      pod: &pod
+      pod:
         enableServiceLinks: false
         securityContext:
           runAsUser: 2000
@@ -39,7 +39,7 @@ app-template:
           fsGroupChangePolicy: OnRootMismatch
       containers:
         main:
-          image: &image
+          image:
             repository: ghcr.io/immich-app/immich-server
             # renovate: datasource=docker depName=ghcr.io/immich-app/immich-server
             tag: v1.132.3
@@ -47,7 +47,7 @@ app-template:
             <<: *env
             IMMICH_WORKERS_INCLUDE: 'api'
             IMMICH_PORT: "3001"
-          envFrom: &envFrom
+          envFrom:
             - secretRef:
                 name: immich-secrets
           resources:
@@ -70,19 +70,30 @@ app-template:
     microservices:
       strategy: RollingUpdate
       pod:
-        <<: *pod
+        enableServiceLinks: false
+        securityContext:
+          runAsUser: 2000
+          runAsGroup: 2000
+          runAsNonRoot: true
+          fsGroup: 2000
+          fsGroupChangePolicy: OnRootMismatch
         runtimeClassName: nvidia
         labels:
           runtime-class: nvidia
       containers:
         main:
-          image: *image
+          image:
+            repository: ghcr.io/immich-app/immich-server
+            # renovate: datasource=docker depName=ghcr.io/immich-app/immich-server
+            tag: v1.132.3
           env:
             <<: *env
             TZ: Europe/Madrid
             NVIDIA_VISIBLE_DEVICES: all
             IMMICH_WORKERS_EXCLUDE: 'api'
-          envFrom: *envFrom
+          envFrom:
+            - secretRef:
+                name: immich-secrets
           resources:
             requests:
               cpu: 10m
@@ -95,7 +106,13 @@ app-template:
     ml:
       strategy: RollingUpdate
       pod:
-        <<: *pod
+        enableServiceLinks: false
+        securityContext:
+          runAsUser: 2000
+          runAsGroup: 2000
+          runAsNonRoot: true
+          fsGroup: 2000
+          fsGroupChangePolicy: OnRootMismatch
         runtimeClassName: nvidia
         labels:
           runtime-class: nvidia
@@ -109,10 +126,11 @@ app-template:
             <<: *env
             NVIDIA_VISIBLE_DEVICES: all
             MPLCONFIGDIR: /.config/matplotlib
-            # Guide to choose the model: https://github.com/immich-app/immich/discussions/11862
             MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
             MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
-          envFrom: *envFrom
+          envFrom:
+            - secretRef:
+                name: immich-secrets
           resources:
             requests:
               cpu: 300m
@@ -128,6 +146,7 @@ app-template:
         main:
           image:
             repository: public.ecr.aws/docker/library/redis
+            # renovate: datasource=docker depName=public.ecr.aws/docker/library/redis
             tag: 7.4.3
           env:
             REDIS_REPLICATION_MODE: master
@@ -163,7 +182,6 @@ app-template:
         nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-        # fix timeouts uploading big files disabling proxy buffering
         nginx.ingress.kubernetes.io/proxy-buffering: "off"
         nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
         nginx.ingress.kubernetes.io/proxy-body-size: 35G
@@ -189,7 +207,6 @@ app-template:
         nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-        # fix timeouts uploading big files disabling proxy buffering
         nginx.ingress.kubernetes.io/proxy-buffering: "off"
         nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
         nginx.ingress.kubernetes.io/proxy-body-size: 35G
