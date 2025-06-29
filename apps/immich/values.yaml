@@ -41,6 +41,7 @@ app-template:
         main:
           image: &image
             repository: ghcr.io/immich-app/immich-server
+            # renovate: datasource=docker depName=ghcr.io/immich-app/immich-server
             tag: v1.132.3
           env:
             <<: *env
@@ -102,7 +103,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/immich-app/immich-machine-learning
-            # GPU use require cuda image. E.g.: v1.124.2-cuda
+            # renovate: datasource=docker depName=ghcr.io/immich-app/immich-machine-learning
             tag: v1.131.2-cuda
           env:
             <<: *env
