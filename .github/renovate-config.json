@@ -1,5 +1,151 @@
 {
-    "repositories": [
-        "Daniel-Boluda/homelab"
-    ]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":preserveSemverRanges",
+    ":disableRateLimiting"
+  ],
+  "gitIgnoredAuthors": [
+    "/^\\d+\\+renovate\\d+-bot\\[bot\\]@users\\.noreply\\.github\\.com$/"
+  ],
+  "forkProcessing": "enabled",
+  "rebaseWhen": "conflicted",
+  "commitMessagePrefix": "{{parentDir}}: ",
+  "timezone": "Europe/Madrid",
+  "schedule": [
+    "after 4am and before 10pm daily"
+  ],
+  "enabledManagers": [
+    "argocd",
+    "github-actions",
+    "helm-values",
+    "helmv3",
+    "kustomize",
+    "pre-commit",
+    "regex"
+  ],
+  "pre-commit": {
+    "enabled": true,
+    "commitMessagePrefix": "pre-commit: ",
+    "branchPrefix": "pre-commit-"
+  },
+  "configMigration": true,
+  "regexManagers": [
+    {
+      "fileMatch": ["\\.ya?ml$"],
+      "matchStrings": [
+        "image:\\s*(?<depName>[^:\\s]+):(?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "{{depName}}",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "additionalBranchPrefix": "{{parentDir}}-",
+      "addLabels": ["renovate/{{parentDir}}"],
+      "matchPackageNames": ["/.*/"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor","patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "ignoreTests": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchDatasources": ["docker"],
+      "versioning": "loose",
+      "matchPackageNames": [
+        "/lidarr/",
+        "/prowlarr/",
+        "/qbittorrent/",
+        "/radarr/",
+        "/sonarr/"
+      ]
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["nextcloud","redis"],
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "30 days"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["minor","patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "ignoreTests": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "automerge": true,
+      "ignoreTests": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "matchPackageNames": [
+        "hashicorp/vault",
+        "registry.k8s.io/sig-storage/csi-provisioner",
+        "registry.k8s.io/sig-storage/csi-snapshotter"
+      ],
+      "matchManagers": ["regex"],
+      "matchUpdateTypes": ["major","minor"],
+      "minimumReleaseAge": "30 days"
+    },
+    {
+      "matchDatasources": ["helm"],
+      "matchUpdateTypes": ["minor","patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "pr",
+      "ignoreTests": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchPackageNames": ["k3s-io/k3s"],
+      "matchManagers": ["regex"],
+      "matchUpdateTypes": ["major","minor"],
+      "minimumReleaseAge": "120 days",
+      "groupName": "k3s upgrade",
+      "additionalBranchPrefix": "k3s-",
+      "addLabels": ["renovate/k3s"]
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["minor"],
+      "matchPackageNames": ["/kanidm/","/appdaemon/"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": false,
+      "ignoreTests": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Group k3s changes in one PR",
+      "matchPackageNames": ["k3s-io/k3s"],
+      "matchManagers": ["regex"],
+      "additionalBranchPrefix": "k3s-",
+      "addLabels": ["renovate/k3s"],
+      "groupName": "k3s upgrade",
+      "groupSlug": "k3s-upgrade"
+    },
+    {
+      "description": "Group app-template updates in one PR",
+      "matchDatasources": ["helm"],
+      "groupName": "app-template",
+      "groupSlug": "app-template",
+      "additionalBranchPrefix": "app-template-",
+      "addLabels": ["renovate/app-template"],
+      "matchPackageNames": ["/app-template/"],
+      "commitMessagePrefix": "app-template: "
+    }
+  ]
 }
