@@ -6,13 +6,13 @@ metadata:
     backup/retain: quaterly
 spec:
   teamId: immich
-  dockerImage: registry.wuhoo.xyz/jerry/spilo-pgvecto.rs:spilo-16-3.2-p2-pgvectors-0.2.0
+  dockerImage: ghcr.io/pando85/spilo-17-vchord:4.0-p2
   numberOfInstances: 1
 
   resources:
     requests:
       cpu: 10m
-      memory: 512Mi
+      memory: 128Mi
     limits:
       cpu: "10"
       memory: 10Gi
@@ -29,10 +29,9 @@ spec:
     immich: immich
 
   postgresql:
-    version: "16"
+    version: "17"
     parameters:
       archive_mode: "off"
-      # minimal value. If not default to 100
       max_connections: "25"
       shared_buffers: 32MB
       log_checkpoints: "off"
@@ -42,7 +41,7 @@ spec:
       log_min_duration_statement: "-1"
       log_statement: none
       # add vectors.so to shared_preload_libraries
-      shared_preload_libraries: "bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,vectors.so"
+      shared_preload_libraries: "bg_mon,pg_stat_statements,pgextwlist,pg_auth_mon,set_user,timescaledb,pg_cron,pg_stat_kcache,vchord.so"
       # ZFS settings:
       full_page_writes: "off"
 
@@ -51,11 +50,11 @@ spec:
   #     extensions:
   #     # it doesn't work. Manually applied:
   #     # ```sql
-  #     # CREATE EXTENSION cube;
-  #     # CREATE EXTENSION earthdistance;
-  #     # ALTER SYSTEM SET shared_preload_libraries = "vectors.so"
-  #     # CREATE EXTENSION vectors;
+  #     # CREATE EXTENSION IF NOT EXISTS cube;
+  #     # CREATE EXTENSION IF NOT EXISTS earthdistance;
+  #     # ALTER SYSTEM SET shared_preload_libraries = "vchord.so"
+  #     # CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
   #     # ```
   #       cube: public
   #       earthdistance: public
-  #       vectors: public
+  #       vchord: public
