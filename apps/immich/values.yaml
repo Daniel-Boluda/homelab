@@ -121,7 +121,7 @@ app-template:
           image:
             repository: ghcr.io/immich-app/immich-machine-learning
             # renovate: datasource=docker depName=ghcr.io/immich-app/immich-machine-learning
-            tag: v1.131.2-cuda
+            tag: v1.135.3-cuda
           env:
             <<: *env
             NVIDIA_VISIBLE_DEVICES: all
