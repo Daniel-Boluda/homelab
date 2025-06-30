@@ -29,10 +29,9 @@ spec:
     immich: immich
 
   postgresql:
-    version: "16"
+    version: "17"
     parameters:
       archive_mode: "off"
-      # minimal value. If not default to 100
       max_connections: "25"
       shared_buffers: 32MB
       log_checkpoints: "off"
