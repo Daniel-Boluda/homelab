@@ -1,25 +1,17 @@
 automation:
   alias: Reboot Ollama when unavailable
   trigger:
-    - platform: event
-      event_type: system_log_event
-      event_data:
-        level: error
+    - platform: state
+      entity_id:
+        - conversation.llama3_2_3b
+        - conversation.gemma3_12b
+        - conversation.qwen2_5
 
   condition:
     - condition: template
-      value_template: >
-        {{ trigger.event.data.message is string and 'llama runner process has terminated' in trigger.event.data.message }}
+      value_template: "{{ trigger.to_state.state == 'unavailable' }}"
 
   action:
-    - delay: '00:01:00'
-    - service: homeassistant.reload_config_entry
+    - service: conversation.reload_pipeline
       data:
-        entry_id: 01JVG4C4ZH3X7M6P7AR9N9TV2Y
-    - service: notify.mobile_app_sm_a256b
-      data:
-        message: "Ollama integration reloaded after Llama process crash detected."
-    - service: persistent_notification.create
-      data:
-        title: Ollama Restart
-        message: "Ollama integration reloaded after Llama process crash detected."
+        entity_id: "{{ trigger.entity_id }}"
