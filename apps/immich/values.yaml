@@ -70,9 +70,9 @@ app-template:
       strategy: RollingUpdate
       pod:
         <<: *pod
-        runtimeClassName: nvidia
-        labels:
-          runtime-class: nvidia
+        # runtimeClassName: nvidia
+        # labels:
+        #   pod-cleaner.dbcloud.org/watch: "true"
       containers:
         main:
           image: *image
@@ -86,41 +86,41 @@ app-template:
             requests:
               cpu: 10m
               memory: 256Mi
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"
             limits:
               cpu: "10"
               memory: 20Gi
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"
     ml:
       strategy: RollingUpdate
       pod:
         <<: *pod
-        runtimeClassName: nvidia
-        labels:
-          runtime-class: nvidia
+        # runtimeClassName: nvidia
+        # labels:
+        #   pod-cleaner.dbcloud.org/watch: "true"
       containers:
         main:
           image:
             repository: ghcr.io/immich-app/immich-machine-learning
             # GPU use require cuda image. E.g.: v1.124.2-cuda
-            tag: v1.135.3-cuda
+            tag: v1.135.3
           env:
             <<: *env
             NVIDIA_VISIBLE_DEVICES: all
             MPLCONFIGDIR: /.config/matplotlib
             # Guide to choose the model: https://github.com/immich-app/immich/discussions/11862
-            MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
-            MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
+            MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: "ViT-H-14-quickgelu__dfn5b"
+            # MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: "immich-app/ViT-H-14-quickgelu__dfn5b"
           envFrom: *envFrom
           resources:
             requests:
               cpu: 300m
               memory: 1Gi
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"
             limits:
               cpu: "4"
               memory: 10Gi
-              nvidia.com/gpu: "1"
+              # nvidia.com/gpu: "1"
           probes: *probes
     redis:
       containers:
