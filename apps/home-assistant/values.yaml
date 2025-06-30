@@ -89,7 +89,7 @@ app-template:
             tag: 4.5.11
           env:
             HA_URL: http://home-assistant-hass:8123
-            DASH_URL: https://appdaemon.dbcloud.org
+            DASH_URL: http://0.0.0.0:5050
             TIMEZONE: Europe/Madrid
           envFrom:
             - secretRef:
