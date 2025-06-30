@@ -41,7 +41,7 @@ app-template:
         main:
           image: &image
             repository: ghcr.io/immich-app/immich-server
-            tag: v1.135.3
+            tag: v1.132.3
           env:
             <<: *env
             IMMICH_WORKERS_INCLUDE: 'api'
@@ -70,9 +70,9 @@ app-template:
       strategy: RollingUpdate
       pod:
         <<: *pod
-        # runtimeClassName: nvidia
-        # labels:
-        #   pod-cleaner.dbcloud.org/watch: "true"
+        runtimeClassName: nvidia
+        labels:
+          runtime-class: nvidia
       containers:
         main:
           image: *image
@@ -86,48 +86,48 @@ app-template:
             requests:
               cpu: 10m
               memory: 256Mi
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
             limits:
               cpu: "10"
               memory: 20Gi
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
     ml:
       strategy: RollingUpdate
       pod:
         <<: *pod
-        # runtimeClassName: nvidia
-        # labels:
-        #   pod-cleaner.dbcloud.org/watch: "true"
+        runtimeClassName: nvidia
+        labels:
+          runtime-class: nvidia
       containers:
         main:
           image:
             repository: ghcr.io/immich-app/immich-machine-learning
             # GPU use require cuda image. E.g.: v1.124.2-cuda
-            tag: v1.135.3
+            tag: v1.131.2-cuda
           env:
             <<: *env
             NVIDIA_VISIBLE_DEVICES: all
             MPLCONFIGDIR: /.config/matplotlib
             # Guide to choose the model: https://github.com/immich-app/immich/discussions/11862
-            MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: "ViT-H-14-quickgelu__dfn5b"
-            # MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: "immich-app/ViT-H-14-quickgelu__dfn5b"
+            MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
+            MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: "immich-app/ViT-B-16-SigLIP-384__webli"
           envFrom: *envFrom
           resources:
             requests:
               cpu: 300m
               memory: 1Gi
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
             limits:
               cpu: "4"
               memory: 10Gi
-              # nvidia.com/gpu: "1"
+              nvidia.com/gpu: "1"
           probes: *probes
     redis:
       containers:
         main:
           image:
             repository: public.ecr.aws/docker/library/redis
-            tag: 8.0.2
+            tag: 7.4.3
           env:
             REDIS_REPLICATION_MODE: master
           command: ["redis-server"]
