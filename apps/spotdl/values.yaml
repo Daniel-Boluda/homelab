@@ -10,37 +10,16 @@ app-template:
           image:
             repository: spotdl/spotify-downloader
             tag: v4.1.1
+          command:
+            - "spotdl"
+            - "web"
+            - "--host"
+            - "0.0.0.0"
+            - "--web-use-output-dir"
           env:
             TZ: Europe/Madrid
-          resources:
-            requests:
-              cpu: 10m
-              memory: 512Mi
-            limits:
-              memory: 750Mi
-          probes:
-            liveness:
-              enabled: true
-            readiness:
-              enabled: true
-            startup:
-              enabled: true
-              spec:
-                failureThreshold: 30
-                periodSeconds: 5
-
-    spotdl-web:
-      labels:
-        backup/retain: quaterly
-      type: statefulset
-      replicas: 1
-      containers:
-        spotdl-web:
-          image:
-            repository: ghcr.io/spotdl/spotdl-web
-            tag: latest
-          env:
-            TZ: Europe/Madrid
+            XDG_CACHE_HOME: /config/.cache
+            POETRY_CACHE_DIR: /config/.cache
             SPOTDL_COMMAND: spotdl
             SPOTDL_OUTPUT_DIR: /music
           resources:
@@ -61,11 +40,11 @@ app-template:
                 periodSeconds: 5
 
   service:
-    spotdl-web:
-      controller: spotdl-web
+    spotdl:
+      controller: spotdl
       ports:
         http:
-          port: 80
+          port: 8800
 
   ingress:
     spotdl:
@@ -80,7 +59,7 @@ app-template:
         - path: /
           pathType: Prefix
           service:
-            identifier: spotdl-web
+            identifier: spotdl
             port: http
       tls:
       - hosts:
@@ -103,7 +82,7 @@ app-template:
         - path: /
           pathType: Prefix
           service:
-            identifier: spotdl-web
+            identifier: spotdl
             port: http
       tls:
       - hosts:
