@@ -11,6 +11,8 @@ app-template:
             repository: spotdl/spotify-downloader
             tag: v4.1.1
           command:
+            - "python3"
+            - "-m"
             - "spotdl"
             - "web"
             - "--host"
