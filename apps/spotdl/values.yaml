@@ -10,6 +10,7 @@ app-template:
           image:
             repository: spotdl/spotify-downloader
             tag: v4.1.1
+          command: web --host 0.0.0.0 --web-use-output-dir
           env:
             TZ: Europe/Madrid
             XDG_CACHE_HOME: /config/.cache
