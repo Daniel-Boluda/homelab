@@ -12,9 +12,6 @@ app-template:
             tag: v4.1.1
           env:
             TZ: Europe/Madrid
-          envFrom:
-            - secretRef:
-                name: spotdl-secrets
           resources:
             requests:
               cpu: 10m
