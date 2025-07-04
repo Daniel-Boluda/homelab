@@ -1,0 +1,118 @@
+app-template:
+  controllers:
+    spotdl:
+      labels:
+        backup/retain: quaterly
+      type: statefulset
+      containers:
+        spotdl:
+          image:
+            repository: spotdl/spotify-downloader
+            tag: v4.1.1
+          env:
+            TZ: Europe/Madrid
+          envFrom:
+            - secretRef:
+                name: spotdl-secrets
+          resources:
+            requests:
+              cpu: 10m
+              memory: 512Mi
+            limits:
+              memory: 750Mi
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
+
+        web:
+          image:
+            repository: ghcr.io/spotdl/spotdl-web
+            tag: latest
+          env:
+            - name: SPOTDL_COMMAND
+              value: spotdl
+            - name: SPOTDL_OUTPUT_DIR
+              value: /music
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - name: music
+              mountPath: /music
+
+  service:
+    spotdl-web:
+      controller: spotdl        # sigue seleccionando los pods del StatefulSet "spotdl"
+      ports:
+        http:
+          port: 80
+          targetPort: http      # apunta al containerPort: http (80) del container "web"
+
+  ingress:
+    spotdl:
+      enabled: true
+      className: nginx-internal
+      annotations:
+        external-dns.alpha.kubernetes.io/enabled: "true"
+        cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+      hosts:
+      - host: &host spotdl.internal.dbcloud.org
+        paths:
+        - path: /
+          pathType: Prefix
+          service:
+            identifier: spotdl-web    # aquí cambiamos al service "spotdl-web"
+            port: http
+      tls:
+      - hosts:
+        - *host
+        secretName: spotdl-tls-certificate
+
+    external:
+      enabled: true
+      className: nginx-external
+      annotations:
+        external-dns.alpha.kubernetes.io/enabled: "true"
+        external-dns.alpha.kubernetes.io/target: dbcloud.org
+        cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+        nginx.ingress.kubernetes.io/auth-url: https://auth.dbcloud.org/oauth2/auth?allowed_groups=spotdlUsers
+        nginx.ingress.kubernetes.io/auth-signin: https://auth.dbcloud.org/oauth2/start
+        nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+      hosts:
+      - host: &host spotdl.dbcloud.org
+        paths:
+        - path: /
+          pathType: Prefix
+          service:
+            identifier: spotdl-web    # también aquí
+            port: http
+      tls:
+      - hosts:
+        - *host
+        secretName: spotdl-external-tls-certificate
+
+  defaultPodOptions:
+    securityContext:
+      runAsUser: 995
+      runAsGroup: 991
+      fsGroup: 991
+      fsGroupChangePolicy: "OnRootMismatch"
+
+  persistence:
+    config:
+      enabled: true
+      globalMounts:
+      - path: /config
+      existingClaim: config-spotdl
+    music:
+      enabled: true
+      globalMounts:
+      - path: /music
+      existingClaim: music-spotdl
