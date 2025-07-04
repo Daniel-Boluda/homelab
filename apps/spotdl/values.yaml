@@ -13,10 +13,6 @@ app-template:
           command: web --host 0.0.0.0 --web-use-output-dir
           env:
             TZ: Europe/Madrid
-            XDG_CACHE_HOME: /config/.cache
-            POETRY_CACHE_DIR: /config/.cache
-            SPOTDL_COMMAND: spotdl
-            SPOTDL_OUTPUT_DIR: /music
           resources:
             requests:
               cpu: 10m
@@ -92,11 +88,6 @@ app-template:
       fsGroupChangePolicy: "OnRootMismatch"
 
   persistence:
-    config:
-      enabled: true
-      globalMounts:
-        - path: /config
-      existingClaim: config-spotdl
     music:
       enabled: true
       globalMounts:
