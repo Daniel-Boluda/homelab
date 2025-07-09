@@ -16,6 +16,8 @@ app-template:
             EXECUTIONS_DATA_PRUNE: true
             EXECUTIONS_DATA_MAX_AGE: 7
             EXECUTIONS_DATA_PRUNE_MAX_COUNT: 50000
+            WEBHOOK_URL: https://n8n.dbcloud.org/
+            VUE_APP_URL_BASE_API: https://n8n.dbcloud.org/
             N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: false
             N8N_PROTOCOL: "https"
             N8N_PORT: 8080
