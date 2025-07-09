@@ -6,7 +6,7 @@ app-template:
       type: statefulset
       replicas: 1
       containers:
-        n8n:
+        main:
           image:
             repository: n8nio/n8n
             tag: 1.102.0
