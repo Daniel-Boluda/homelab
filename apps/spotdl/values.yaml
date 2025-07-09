@@ -90,6 +90,11 @@ app-template:
       fsGroupChangePolicy: "OnRootMismatch"
 
   persistence:
+    config:
+      enabled: true
+      globalMounts:
+        - path: /root/.cache
+      existingClaim: config-spotdl
     music:
       enabled: true
       globalMounts:
