@@ -13,6 +13,10 @@ app-template:
           args: ["web", "--host", "0.0.0.0", "--web-use-output-dir"]
           env:
             TZ: Europe/Madrid
+            SPOTIPY_REDIRECT_URI: "http://localhost:8800/callback"
+          envFrom:
+            secretRef:
+              name: spotdl-secrets
           resources:
             requests:
               cpu: 10m
