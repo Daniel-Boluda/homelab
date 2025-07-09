@@ -15,8 +15,9 @@ app-template:
             TZ: Europe/Madrid
             SPOTIPY_REDIRECT_URI: "http://localhost:8800/callback"
           envFrom:
-            secretRef:
+          - secretRef:
               name: spotdl-secrets
+
           resources:
             requests:
               cpu: 10m
