@@ -51,6 +51,7 @@ app-template:
         http:
           port: 8080
 
+  ingress:
     external:
       enabled: true
       className: nginx-external
