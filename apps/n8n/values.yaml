@@ -77,13 +77,13 @@ app-template:
 
   defaultPodOptions:
     securityContext:
-      runAsUser: 995
-      runAsGroup: 991
-      fsGroup: 991
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
 
   persistence:
-    music:
+    config:
       enabled: true
       globalMounts:
         - path: /home/node/.n8n
