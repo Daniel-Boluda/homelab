@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/instance: n8n
+    app.kubernetes.io/name: n8n
+    backup: n8n-config-zfs
+    backup/retain: quaterly
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+  name: config-n8n
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
