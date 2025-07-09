@@ -9,7 +9,7 @@ app-template:
         main:
           image:
             repository: spotdl/spotify-downloader
-            tag: v4.1.1
+            tag: v4.2.11
           args: ["web", "--host", "0.0.0.0", "--web-use-output-dir"]
           env:
             TZ: Europe/Madrid
