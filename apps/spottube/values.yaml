@@ -12,8 +12,6 @@ app-template:
             tag: latest
           env:
             TZ: Europe/Madrid
-            output_format: "{artist}/{album}/{title}.{output-ext}"
-            spotdl_arguments: "--save-playlist --playlist-format m3u8"
             thread_limit: 1
             artist_track_selection: all
           envFrom:
@@ -102,12 +100,7 @@ app-template:
       existingClaim: config-spottube
     music:
       enabled: true
+      type: hostPath
+      hostPath: /datasets/music/spottube
       globalMounts:
-        - path: /spottube/downloads
-      existingClaim: music-spottube
-    #music:
-    #  enabled: true
-    #  type: hostPath
-    #  hostPath: /datasets/music
-    #  globalMounts:
-    #  - path: /datasets/music
+      - path: /spottube/downloads

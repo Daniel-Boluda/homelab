@@ -15,21 +15,3 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    app.kubernetes.io/instance: spottube
-    app.kubernetes.io/name: spottube
-    backup: spottube-music-zfs
-    backup/retain: quaterly
-  annotations:
-    argocd.argoproj.io/sync-options: Prune=false
-  name: music-spottube
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
