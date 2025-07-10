@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: music-importer-script
+  namespace: spottube
+data:
+  music_importer_script.py: |-
+{{ .Files.Get "src/music_importer_script.py" | indent 4 }}

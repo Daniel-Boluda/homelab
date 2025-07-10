@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: music-importer-script-cronjob
+  namespace: spottube
+spec:
+  schedule: "*/5 * * * *" # Every 5 minutes
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: music-importer
+            image: bolferdocker/pythonmutagen:0.0.0
+            command: ["python", "/app/music_importer_script.py"]
+            volumeMounts:
+            - name: script-volume
+              mountPath: /app
+            - name: music-volume
+              mountPath: /music
+
+          volumes:
+          - name: script-volume
+            configMap:
+              name: music-importer-script
+          - name: music-volume
+            hostPath:
+              path: /datasets/music
+
+          restartPolicy: OnFailure
