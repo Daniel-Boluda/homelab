@@ -7,6 +7,10 @@ import time
 import re
 from collections import defaultdict
 
+def sanitize(name: str) -> str:
+    # Reemplaza caracteres ilegales o problemáticos para nombres de archivos/rutas
+    return re.sub(r'[<>:"/\\|?*\']', '_', name).strip()
+
 # Ruta base montada desde host
 raw_dir = Path("/music/spottube")
 organized_dir = Path("/music")
