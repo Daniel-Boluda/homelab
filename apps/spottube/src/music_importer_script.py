@@ -4,6 +4,7 @@ from mutagen.mp3 import MP3
 import shutil
 import os
 import time
+import re
 from collections import defaultdict
 
 # Ruta base montada desde host
@@ -28,9 +29,9 @@ for folder, files in mp3_files_by_folder.items():
     for mp3_file in files:
         try:
             audio = MP3(mp3_file, ID3=EasyID3)
-            artist = audio.get("artist", ["Unknown Artist"])[0]
-            album = audio.get("album", ["Unknown Album"])[0]
-            title = audio.get("title", [mp3_file.stem])[0]
+            artist = sanitize(audio.get("artist", ["Unknown Artist"])[0])
+            album = sanitize(audio.get("album", ["Unknown Album"])[0])
+            title = sanitize(audio.get("title", [mp3_file.stem])[0])
 
             dest_path = organized_dir / artist / album
             dest_path.mkdir(parents=True, exist_ok=True)
