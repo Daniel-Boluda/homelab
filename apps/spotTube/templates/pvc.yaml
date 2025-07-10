@@ -2,13 +2,13 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app.kubernetes.io/instance: spotTube
-    app.kubernetes.io/name: spotTube
-    backup: spotTube-config-zfs
+    app.kubernetes.io/instance: spottube
+    app.kubernetes.io/name: spottube
+    backup: spottube-config-zfs
     backup/retain: quaterly
   annotations:
     argocd.argoproj.io/sync-options: Prune=false
-  name: config-spotTube
+  name: config-spottube
 spec:
   accessModes:
     - ReadWriteOnce
@@ -20,13 +20,13 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app.kubernetes.io/instance: spotTube
-    app.kubernetes.io/name: spotTube
-    backup: spotTube-music-zfs
+    app.kubernetes.io/instance: spottube
+    app.kubernetes.io/name: spottube
+    backup: spottube-music-zfs
     backup/retain: quaterly
   annotations:
     argocd.argoproj.io/sync-options: Prune=false
-  name: music-spotTube
+  name: music-spottube
 spec:
   accessModes:
     - ReadWriteOnce
