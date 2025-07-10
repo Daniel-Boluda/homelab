@@ -93,7 +93,7 @@ app-template:
     config:
       enabled: true
       globalMounts:
-        - path: /root/.cache
+        - path: /root/.cache/spotdl
       existingClaim: config-spotdl
     music:
       enabled: true
