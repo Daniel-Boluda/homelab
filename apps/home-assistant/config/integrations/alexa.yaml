@@ -47,11 +47,11 @@ alexa:
       # all alexa display categories are available at https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-discovery.html#display-categories
       climate.radiador_despacho:
         name: "Radiador del despacho"
-        description: "Controla la luz temperatura del radiador del despacho"
+        description: "Controla la temperatura del radiador del despacho"
         display_categories: THERMOSTAT
       climate.radiador_dormitorio:
         name: "Radiador del dormitorio"
-        description: "Controla la luz temperatura del radiador del dormitorio"
+        description: "Controla la temperatura del radiador del dormitorio"
         display_categories: THERMOSTAT
       switch.luz_izquierda_sofa:
         name: "Lámpara izquierda del sofa del salón"
@@ -154,8 +154,8 @@ alexa:
         description: "Controla el ventilador del dormitorio"
         display_categories: FAN
       fan.ventilador_invitados:
-        name: "Ventilador del cuarto de invitados"
-        description: "Controla el ventilador del cuarto de invitados"
+        name: "Ventilador de invitados"
+        description: "Controla el ventilador de invitados"
         display_categories: FAN
       fan.ventilador_salon:
         name: "Ventilador del salón"
@@ -190,6 +190,6 @@ alexa:
         description: "Enciende el ordenador del despacho"
         display_categories: SMARTPLUG
       switch.extractor_aseo:
-        name: "Ordenador del extractor del aseo"
+        name: "Extractor del aseo"
         description: "Enciende el extractor del aseo"
         display_categories: SMARTPLUG
