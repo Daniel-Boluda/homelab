@@ -613,7 +613,7 @@ app-template:
       advancedMounts:
         zigbee2mqtt:
           zigbee2mqtt:
-            - path: /app
+            - path: /app/data
     zigbee2mqtt-usb:
       enabled: true
       type: hostPath
