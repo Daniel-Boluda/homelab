@@ -617,12 +617,12 @@ app-template:
     zigbee2mqtt-usb:
       enabled: true
       type: hostPath
-      hostPath: /dev/zigbee_cc2652
+      hostPath: /dev/ttyUSB0
       hostPathType: CharDevice
       advancedMounts:
         zigbee2mqtt:
           zigbee2mqtt:
-            - path: /dev/zigbee_cc2652
+            - path: /dev/ttyUSB0
 
     frigate-config:
       enabled: true
