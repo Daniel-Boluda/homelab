@@ -206,9 +206,6 @@ app-template:
     zigbee2mqtt:
       type: deployment
       replicas: 1
-      pod:
-        securityContext:
-          privileged: true
       containers:
         zigbee2mqtt:
           image:
@@ -217,6 +214,8 @@ app-template:
           env:
             - name: TZ
               value: Europe/Madrid
+          securityContext:
+            privileged: true 
           resources:
             requests:
               cpu: 30m
