@@ -218,6 +218,7 @@ app-template:
             runAsUser: 0
             runAsGroup: 0 
             privileged: true 
+            allowPrivilegeEscalation: true
           resources:
             requests:
               cpu: 30m
