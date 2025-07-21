@@ -211,9 +211,6 @@ app-template:
           image:
             repository: koenkk/zigbee2mqtt
             tag: 1.38.0
-          command: ["/bin/sh", "-c"]
-          args:
-            - echo "Esperando configuración manual..." && sleep 600
           env:
             - name: TZ
               value: Europe/Madrid
