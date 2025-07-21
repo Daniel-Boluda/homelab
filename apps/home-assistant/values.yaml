@@ -215,6 +215,8 @@ app-template:
             - name: TZ
               value: Europe/Madrid
           securityContext:
+            runAsUser: 0
+            runAsGroup: 0 
             privileged: true 
           resources:
             requests:
