@@ -26,7 +26,6 @@ prometheus:
   namespace: hass
   requires_auth: false
 
-telegram_bot: !include secrets/telegram_bot.yaml
 notify: !include secrets/notify.yaml
 # auth_providers: !include secrets/auth_providers.yaml
 
@@ -49,25 +48,4 @@ switch:
     shutdown_command: "shutdown /s /t 0"
     name: "Dabol-meshy"
 
-  - platform: mqtt
-    name: "riego_pared"
-    command_topic: "cmnd/tasmota_6A3614/ZbSend"
-    state_topic: "tele/tasmota_6A3614/SENSOR"
-    value_template: "{{ value_json['ZbReceived']['0x5D46']['Power'] }}"
-    payload_on: '{"device":"0x5D46","send":{"Power":"On","on_time":10}}'
-    payload_off: '{"device":"0x5D46","send":{"Power":"Off"}}'
-    availability_topic: "tele/tasmota_6A3614/LWT"
-    payload_available: "Online"
-    payload_not_available: "Offline"
-
-  - platform: mqtt
-    name: "riego_cristalera"
-    command_topic: "cmnd/tasmota_6A3614/ZbSend"
-    state_topic: "tele/tasmota_6A3614/SENSOR"
-    value_template: "{{ value_json['ZbReceived']['0xCE47']['Power'] }}"
-    payload_on: '{"device":"0xCE47","send":{"Power":"On","on_time":10}}'
-    payload_off: '{"device":"0xCE47","send":{"Power":"Off"}}'
-    availability_topic: "tele/tasmota_6A3614/LWT"
-    payload_available: "Online"
-    payload_not_available: "Offline"
 
