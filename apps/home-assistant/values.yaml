@@ -203,6 +203,35 @@ app-template:
                 failureThreshold: 30
                 periodSeconds: 5
 
+    zigbee2mqtt:
+      type: deployment
+      replicas: 1
+      pod:
+        securityContext:
+          privileged: true
+      containers:
+        zigbee2mqtt:
+          image:
+            repository: koenkk/zigbee2mqtt
+            tag: 1.38.0
+          env:
+            - name: TZ
+              value: Europe/Madrid
+          resources:
+            requests:
+              cpu: 30m
+              memory: 150Mi
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
+
     frigate:
       type: deployment
       replicas: 1
@@ -547,6 +576,24 @@ app-template:
         piper:
           piper:
             - path: /data
+
+    zigbee2mqtt-config:
+      enabled: true
+      existingClaim: zigbee2mqtt-config
+      advancedMounts:
+        zigbee2mqtt:
+          zigbee2mqtt:
+            - path: /app/data
+    zigbee2mqtt-usb:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/zigbee_cc2652
+      hostPathType: CharDevice
+      advancedMounts:
+        zigbee2mqtt:
+          zigbee2mqtt:
+            - path: /dev/zigbee_cc2652
+
     frigate-config:
       enabled: true
       existingClaim: frigate-config

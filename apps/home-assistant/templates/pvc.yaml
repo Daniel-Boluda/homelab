@@ -22,35 +22,17 @@ metadata:
   labels:
     app.kubernetes.io/instance: home-assistant
     app.kubernetes.io/name: home-assistant
-    backup: motioneye-config-zfs
+    backup: zigbee2mqtt-files-zfs
     backup/retain: quaterly
   annotations:
     argocd.argoproj.io/sync-options: Prune=false
-  name: motioneye-config
+  name: zigbee2mqtt-config
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 10Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  labels:
-    app.kubernetes.io/instance: home-assistant
-    app.kubernetes.io/name: home-assistant
-    backup: motioneye-files-zfs
-    backup/retain: quaterly
-  annotations:
-    argocd.argoproj.io/sync-options: Prune=false
-  name: motioneye-files
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 100Gi
+      storage: 5Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
