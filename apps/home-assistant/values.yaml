@@ -349,6 +349,11 @@ app-template:
       ports:
         http:
           port: 10400
+    zigbee2mqtt:
+      controller: zigbee2mqtt
+      ports:
+        http:
+          port: 8080  
     frigate:
       controller: frigate
       ports:
