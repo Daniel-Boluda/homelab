@@ -91,7 +91,7 @@ alexa:
         name: "Luz del ventilador del salón"
         description: "Controla la luz del ventilador del salón"
         display_categories: LIGHT
-      switch.luz_mesa_salon:
+      switch.luz_mesa_cocina:
         name: "Luz de la mesa"
         description: "Controla la luz de la mesa"
         display_categories: LIGHT
