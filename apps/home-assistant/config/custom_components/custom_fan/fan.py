@@ -86,13 +86,10 @@ class CustomFan(FanEntity):
         """Set the speed of the fan, as a percentage."""
         _LOGGER.debug("Setting percentage for %s to %d%%", self._attr_name, percentage)
         self._attr_percentage = percentage
-        
-        if self._attr_is_on:
-            speed_command = f"velocidad_{self.calculate_speed(percentage)}"
-            await self.send_command(speed_command)
-            _LOGGER.info("Fan %s set to speed command: %s", self._attr_name, speed_command)
-        else:
-            _LOGGER.info("Fan %s is off", self._attr_name)
+
+        speed_command = f"velocidad_{self.calculate_speed(percentage)}"
+        await self.send_command(speed_command)
+        _LOGGER.info("Fan %s set to speed command: %s", self._attr_name, speed_command)
         
         # Update the interruptor speed
         await self._update_interruptor_speed(percentage)

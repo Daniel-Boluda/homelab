@@ -41,8 +41,10 @@ alexa:
         - switch.modo_cine_stateful_scene
         - switch.modo_buenos_dias_stateful_scene
         - switch.modo_buenas_noches_stateful_scene
+        - switch.modo_fuera_de_casa_stateful_scene
         - switch.dabol_meshy
         - switch.extractor_aseo
+        - media_player.samsung_q60ba_75_tv
     entity_config:
       # all alexa display categories are available at https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-discovery.html#display-categories
       climate.radiador_despacho:
@@ -165,6 +167,7 @@ alexa:
         name: "Puerta de la entrada"
         description: "Monitoriza el estado de la puerta de entrada"
         display_categories: DOOR
+        
       switch.modo_cocinar_stateful_scene:
         name: "escena cocinar"
         description: "Activa la escena cocinar"
@@ -185,6 +188,11 @@ alexa:
         name: "escena buenas noches"
         description: "Activa la escena buenas noches"
         display_categories: SMARTPLUG
+      switch.switch.modo_fuera_de_casa_stateful_scene:
+        name: "escena fuera de casa"
+        description: "Activa la escena fuera de casa"
+        display_categories: SMARTPLUG        
+
       switch.dabol_meshy:
         name: "Ordenador del despacho"
         description: "Enciende el ordenador del despacho"
@@ -193,3 +201,7 @@ alexa:
         name: "Extractor del aseo"
         description: "Enciende el extractor del aseo"
         display_categories: SMARTPLUG
+      media_player.samsung_q60ba_75_tv:
+        name: "Televisor del salón"
+        description: "Controla el televisor del salón"
+        display_categories: TV
