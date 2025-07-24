@@ -79,12 +79,10 @@ def generate_diff(old_lines, new_lines):
     return '\n'.join(diff)
 
 def extract_link_info(line):
-    # Solo usando métodos de string para evitar dependencias externas
     href_start = line.find('href="') + len('href="')
     href_end = line.find('"', href_start)
     href = line[href_start:href_end] if href_start > -1 and href_end > -1 else ""
 
-    # Texto entre > y </a>
     link_start = line.find('>', href_end) + 1
     link_end = line.find('</a>', link_start)
     text = line[link_start:link_end].strip() if link_start > -1 and link_end > -1 else ""
@@ -94,26 +92,18 @@ def extract_link_info(line):
         return f"<a href=\"{url}\">{text}</a>"
     return None
 
-def summarize_changes(diff_text):
-    additions, removals = [], []
-
+def notify_changes_separately(diff_text):
     for line in diff_text.splitlines():
         if line.startswith("+") and not line.startswith("+++"):
             info = extract_link_info(line[1:].strip())
             if info:
-                additions.append(info)
+                notify_telegram(f"🔔 <b>¡Nuevo documento añadido!</b>\n\n➕ {info}")
+                time.sleep(1)
         elif line.startswith("-") and not line.startswith("---"):
             info = extract_link_info(line[1:].strip())
             if info:
-                removals.append(info)
-
-    summary = ""
-    if additions:
-        summary += "➕ <b>Documentos añadidos:</b>\n" + "\n".join(additions) + "\n\n"
-    if removals:
-        summary += "➖ <b>Documentos eliminados:</b>\n" + "\n".join(removals)
-
-    return summary.strip()
+                notify_telegram(f"⚠️ <b>Documento eliminado:</b>\n\n➖ {info}")
+                time.sleep(1)
 
 def monitor_page():
     previous_lines = load_previous_lines()
@@ -130,12 +120,8 @@ def monitor_page():
 
                 if current_lines != previous_lines:
                     diff_text = generate_diff(previous_lines, current_lines)
-                    summary = summarize_changes(diff_text)
-                    if summary:
-                        logging.info("Cambios detectados.")
-                        notify_telegram(f"🔔 <b>¡Cambio detectado en la web del Ministerio de Defensa!</b>\n\n{summary}")
-                    else:
-                        logging.info("Cambio detectado sin diferencias útiles.")
+                    logging.info("Cambios detectados.")
+                    notify_changes_separately(diff_text)
 
                     joined_html = "\n".join(current_lines)
                     save_version(joined_html, diff_text)
