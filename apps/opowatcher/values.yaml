@@ -1,18 +1,30 @@
 app-template:
   controllers:
     opowatcher:
+      type: statefulset
       labels:
         backup/retain: quaterly
-      type: statefulset
+      annotations: {}
       containers:
         opowatcher:
           image:
-            repository: bolferdocker/opowatcher
-            tag: 0.0.3
+            repository: bolferdocker/pythonplaywright
+            tag: 1.0.6
+
+          command:
+            - python
+          args:
+            - /app/scripts/opo_watcher_script.py
 
           envFrom:
-          - secretRef:
-              name: opowatcher-secrets
+            - secretRef:
+                name: opowatcher-secrets
+
+          volumeMounts:
+            - name: script
+              mountPath: /app/scripts
+            - name: config
+              mountPath: /app/html
 
           resources:
             requests:
@@ -24,6 +36,10 @@ app-template:
   persistence:
     config:
       enabled: true
-      globalMounts:
-      - path: /app/html
       existingClaim: config-opowatcher
+      globalMounts: []  # ya se monta explícitamente en containers
+
+  volumes:
+    - name: script
+      configMap:
+        name: python-script
