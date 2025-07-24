@@ -33,6 +33,13 @@ app-template:
       existingClaim: config-opowatcher
     script:
       enabled: true
-      globalMounts: 
-      - path: /app/scripts
-      existingClaim: python-script
+      type: custom
+      globalMounts:
+        - path: /app/scripts
+      volumeSpec:
+        name: scripts
+        projected:
+          defaultMode: 0755
+          sources:
+            - configMap:
+                name: python-script
