@@ -10,8 +10,8 @@ automation:
     action:
       - choose:
           - conditions:
-              - condition: time
-                at: "09:00:00"
+              - condition: template
+                value_template: "{{ now().hour == 9 }}"
             sequence:
               - service: mqtt.publish
                 data:
@@ -24,8 +24,8 @@ automation:
                   payload: >
                     {"state":"ON","on_time":12}  # 120s
           - conditions:
-              - condition: time
-                at: "21:00:00"
+              - condition: template
+                value_template: "{{ now().hour == 21 }}"
             sequence:
               - service: mqtt.publish
                 data:
