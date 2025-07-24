@@ -4,19 +4,22 @@ app-template:
       type: statefulset
       labels:
         backup/retain: quaterly
-      annotations: {}
       containers:
         opowatcher:
           image:
             repository: bolferdocker/pythonplaywright
             tag: 1.0.6
-          command:
-            - python
+
+          command: ["bash", "-c"]
           args:
-            - /app/scripts/opo_watcher_script.py
+            - |
+              sleep 3600 &&
+              python /app/scripts/opo_watcher_script.py
+
           envFrom:
             - secretRef:
                 name: opowatcher-secrets
+
           resources:
             requests:
               cpu: 50m
@@ -24,21 +27,22 @@ app-template:
             limits:
               memory: 1000Mi
 
+      additionalVolumes:
+        - name: script
+          configMap:
+            name: python-script
+        - name: config
+          persistentVolumeClaim:
+            claimName: config-opowatcher
+
+      additionalVolumeMounts:
+        - name: script
+          mountPath: /app/scripts
+        - name: config
+          mountPath: /app/html
+
   persistence:
     config:
       enabled: true
       existingClaim: config-opowatcher
       globalMounts: []
-
-  additionalVolumes:
-    - name: script
-      configMap:
-        name: python-script
-
-  additionalVolumeMounts:
-    - name: script
-      mountPath: /app/scripts
-      subPath: opo_watcher_script.py
-    - name: config-opowatcher
-      claimName: config-opowatcher
-      mountPath: /app/html
