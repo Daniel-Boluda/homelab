@@ -10,12 +10,11 @@ app-template:
           image:
             repository: bolferdocker/pythonplaywright
             tag: 1.0.6
-          command:
-            - python
+          command: ["bash", "-c"]
           args:
-            - /app/scripts/opo_watcher_script.py
-            - sleep
-            - "3600"
+            - |
+              sleep 60 &&
+              python /app/scripts/opo_watcher_script.py
           envFrom:
             - secretRef:
                 name: opowatcher-secrets
