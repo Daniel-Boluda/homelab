@@ -5,4 +5,4 @@ metadata:
   namespace: opowatcher
 data:
   opo_watcher_script.py: |-
-{{ .Files.Get "src/opo_watcher_script.py" | indent 4 }}
+{{ .Files.Get "src/scripts/opo_watcher_script.py" | indent 4 }}

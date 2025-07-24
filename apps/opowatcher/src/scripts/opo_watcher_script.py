@@ -13,7 +13,7 @@ load_dotenv()
 # Configuración
 URL = 'https://www.defensa.gob.es/portalservicios/procesos/personalestatutario/ofertas_empleo_publico/2024/'
 BASE_URL = 'https://www.defensa.gob.es'
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HTML_FILE = os.path.join(BASE_DIR, 'html', 'accordion4_content.html')
 VERSIONS_DIR = os.path.join(BASE_DIR, 'html', 'versions')
 DIFFS_DIR = os.path.join(BASE_DIR, 'html', 'diffs')
