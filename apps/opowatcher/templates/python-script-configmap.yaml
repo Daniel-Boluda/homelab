@@ -4,5 +4,5 @@ metadata:
   name: python-script
   namespace: opowatcher
 data:
-  torrenttickarr_script.py: |-
+  opo_watcher_script.py: |-
 {{ .Files.Get "src/opo_watcher_script.py" | indent 4 }}
