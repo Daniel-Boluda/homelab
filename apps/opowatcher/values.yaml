@@ -10,22 +10,13 @@ app-template:
           image:
             repository: bolferdocker/pythonplaywright
             tag: 1.0.6
-
           command:
             - python
           args:
             - /app/scripts/opo_watcher_script.py
-
           envFrom:
             - secretRef:
                 name: opowatcher-secrets
-
-          volumeMounts:
-            - name: script
-              mountPath: /app/scripts
-            - name: config
-              mountPath: /app/html
-
           resources:
             requests:
               cpu: 50m
@@ -37,9 +28,17 @@ app-template:
     config:
       enabled: true
       existingClaim: config-opowatcher
-      globalMounts: []  # ya se monta explícitamente en containers
+      globalMounts: []
 
-  volumes:
+  additionalVolumes:
     - name: script
       configMap:
         name: python-script
+
+  additionalVolumeMounts:
+    - name: script
+      mountPath: /app/scripts
+      subPath: opo_watcher_script.py
+    - name: config-opowatcher
+      claimName: config-opowatcher
+      mountPath: /app/html
