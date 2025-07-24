@@ -1,0 +1,39 @@
+automation:
+  - alias: Riego SWV automático diario
+    description: Riega cristalera y salón a las 09:00 y 21:00 con tiempos distintos y apagado local.
+    trigger:
+      - platform: time
+        at:
+          - "09:00:00"
+          - "21:00:00"
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: time
+                at: "09:00:00"
+            sequence:
+              - service: mqtt.publish
+                data:
+                  topic: "zigbee2mqtt/riego_cristalera/set"
+                  payload: >
+                    {"state":"ON","on_time":12}  # 120s
+              - service: mqtt.publish
+                data:
+                  topic: "zigbee2mqtt/riego_pared/set"
+                  payload: >
+                    {"state":"ON","on_time":12}  # 120s
+          - conditions:
+              - condition: time
+                at: "21:00:00"
+            sequence:
+              - service: mqtt.publish
+                data:
+                  topic: "zigbee2mqtt/riego_cristalera/set"
+                  payload: >
+                    {"state":"ON","on_time":12}  # 120s
+              - service: mqtt.publish
+                data:
+                  topic: "zigbee2mqtt/riego_pared/set"
+                  payload: >
+                    {"state":"ON","on_time":12}  # 120s
