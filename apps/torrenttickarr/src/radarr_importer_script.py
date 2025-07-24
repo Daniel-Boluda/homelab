@@ -1,70 +1,78 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-import os
 import logging
 import time
+from playwright.sync_api import sync_playwright
 
-# Configure the logging system to log to stdout
+# Configurar logging a stdout
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-# Set up Chrome options
-chrome_options = Options()
-#chrome_options.add_argument("--headless")  # Run Chrome in headless mode (no GUI)
-chrome_options.add_argument("--no-sandbox")  # Required for running Chrome in Docker
-chrome_options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
-chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration (optional but often needed in headless mode)
-
-# Path to chromedriver
-chrome_driver_path = '/usr/local/bin/chromedriver'
-
-
-# Function to log in to the page
-def autoimport_radarr():
-    # Set up Chrome WebDriver
-    service = Service(chrome_driver_path)
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
+def autoimport_radarr(page):
     try:
-        # Navigate to the initial URL
-        driver.get("https://radarr.internal.dbcloud.org/activity/queue")
+        page.goto("https://radarr.internal.dbcloud.org/activity/queue")
+        page.wait_for_url("https://radarr.internal.dbcloud.org/activity/queue", timeout=10000)
+        page.wait_for_selector("table", timeout=10000)
 
-        WebDriverWait(driver, 10).until(
-            EC.url_to_be("https://radarr.internal.dbcloud.org/activity/queue")
-        )
-        
-        # Ensure the page is loaded by waiting for a visible table element
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//table"))
-        )
-
-        # Get the number of rows in the table
-        rows = driver.find_elements(By.XPATH, "//table/tbody/tr")
+        rows = page.query_selector_all("table tbody tr")
         row_count = len(rows)
 
-        for i in range(1, row_count + 1):  # Use index-based iteration
+        for i in range(1, row_count + 1):
             try:
-                # Re-locate the first icon in the last column for the current row
-                icon_xpath = f"//table/tbody/tr[{i}]/td[last()]//button[1]"
-                icon = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, icon_xpath))
+                # Ver si existe el botón de importación (icono user)
+                user_icon_svg = page.query_selector(
+                    f"table tbody tr:nth-child({i}) td:last-child button svg[data-icon='user']"
                 )
 
-                icon.click()
-                time.sleep(2)  # Wait for modal to appear
+                if not user_icon_svg:
+                    logging.info(f'Row {i} skipped: No import button present.')
+                    continue
 
-                # Find and click the import button in the modal
-                import_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'Modal-modal')]//button[contains(text(), 'Import')]"))
-                )
-                import_button.click()
-                time.sleep(2)  # Wait for import action to complete
+                # Subir al botón y hacer clic
+                import_button_click = user_icon_svg.evaluate_handle("el => el.closest('button')")
+                import_button_click.click()
+                time.sleep(2)
 
-                logging.info(f'Processed row {i} successfully.')
+                # Esperar modal
+                modal_selector = "div[class*='Modal-modal']"
+                page.wait_for_selector(modal_selector, timeout=5000)
+
+                # Buscar botón Import
+                import_button = page.query_selector(f"{modal_selector} button:has-text('Import')")
+
+                if import_button and import_button.is_enabled():
+                    import_button.click()
+                    time.sleep(2)
+                    logging.info(f'Row {i} processed via Import.')
+                else:
+                    # Click en Cancel si Import está deshabilitado
+                    cancel_button = page.query_selector(f"{modal_selector} button:has-text('Cancel')")
+                    if cancel_button:
+                        cancel_button.click()
+                        time.sleep(1)
+                        logging.info(f'Row {i}: Import disabled, clicked Cancel.')
+
+                        # Buscar botón remove (icono xmark)
+                        remove_icon_svg = page.query_selector(
+                            f"table tbody tr:nth-child({i}) td:last-child button svg[data-icon='xmark']"
+                        )
+                        if remove_icon_svg:
+                            remove_button = remove_icon_svg.evaluate_handle("el => el.closest('button')")
+                            remove_button.click()
+                            time.sleep(2)
+
+                            # Esperar modal de confirmación de eliminación
+                            page.wait_for_selector(modal_selector, timeout=5000)
+                            remove_confirm_button = page.query_selector(
+                                "button.Button-button-paJ9a.Button-danger-vthZW.Button-medium-ZwfFe"
+                            )
+                            if remove_confirm_button:
+                                remove_confirm_button.click()
+                                time.sleep(2)
+                                logging.info(f'Row {i}: Item removed from queue.')
+                            else:
+                                logging.warning(f'Row {i}: Remove confirmation button not found.')
+                        else:
+                            logging.warning(f'Row {i}: Remove icon/button not found.')
+                    else:
+                        logging.warning(f'Row {i}: Cancel button not found after Import disabled.')
 
             except Exception as row_error:
                 logging.error(f"Error processing row {i}: {row_error}")
@@ -73,12 +81,13 @@ def autoimport_radarr():
         logging.info('Auto-import process completed successfully')
 
     except Exception as e:
-        logging.error(f'Login failed due to an exception: {e}')
-    finally:
-        # Close the browser session
-        driver.quit()
+        logging.error(f'Autoimport failed due to an exception: {e}')
 
 
-# Run the login function for different websites
 if __name__ == "__main__":
-    autoimport_radarr()
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+
+        autoimport_radarr(page)
+        browser.close()

@@ -10,3 +10,5 @@ data:
 {{ .Files.Get "src/torrentcleanerr_script.py" | indent 4 }}
   jellysync_script.py: |-
 {{ .Files.Get "src/jellysync_script.py" | indent 4 }}
+  radarr_importer_script.py: |-
+{{ .Files.Get "src/radarr_importer_script.py" | indent 4 }}

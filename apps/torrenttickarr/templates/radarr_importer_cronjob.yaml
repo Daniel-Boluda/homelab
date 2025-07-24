@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: radarr-importer-script-cronjob
+  namespace: torrenttickarr
+spec:
+  schedule: "0 */12 * * *" # Every 12 hours
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: torrenttickarr-script
+            image: bolferdocker/pythonplaywright:1.0.6
+            command: ["python", "/scripts/radarr_importer_script.py"]
+            volumeMounts:
+            - name: script-volume
+              mountPath: /scripts
+          volumes:
+          - name: script-volume
+            configMap:
+              name: python-script
+          restartPolicy: OnFailure
