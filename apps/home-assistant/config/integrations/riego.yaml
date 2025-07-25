@@ -1,39 +1,48 @@
 automation:
-  - alias: Riego SWV automático diario
+  - alias: Riego SWV automático diario  
+    id: "riego_gestion_completa"
     description: Riega cristalera y salón a las 09:00 y 21:00 con tiempos distintos y apagado local.
     trigger:
+      # 1) Riego diario a las 09:00
       - platform: time
-        at:
-          - "09:00:00"
-          - "21:00:00"
-    condition: []
+        at: "14:30:00"
+        id: "09h_irrigation"
+      # 1) Riego diario a las 21:00
+      - platform: time
+        at: "21:00:00"
+        id: "21h_irrigation"
+
     action:
       - choose:
+          # ---------- Bloque "09h_irrigation" ----------
           - conditions:
               - condition: template
-                value_template: "{{ now().hour == 9 }}"
+                value_template: "{{ trigger.id == '09h_irrigation' }}"
             sequence:
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":12}  # 120s
+                    {"state":"ON","on_time":18}  # 180s
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":12}  # 120s
+                    {"state":"ON","on_time":18}  # 180s
+
+
+          # ---------- Bloque "21h_irrigation" ----------
           - conditions:
               - condition: template
-                value_template: "{{ now().hour == 21 }}"
+                value_template: "{{ trigger.id == '21h_irrigation' }}"
             sequence:
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":12}  # 120s
+                    {"state":"ON","on_time":18}  # 180s
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":12}  # 120s
+                    {"state":"ON","on_time":18}  # 180s
