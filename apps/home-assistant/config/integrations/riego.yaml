@@ -5,16 +5,16 @@ automation:
     trigger:
       # 1) Riego diario a las 09:00
       - platform: time
-        at: "14:30:00"
+        at: "09:05:00"
         id: "09h_irrigation"
       # 1) Riego diario a las 21:00
       - platform: time
-        at: "21:00:00"
+        at: "21:05:00"
         id: "21h_irrigation"
 
     action:
       - choose:
-          # ---------- Bloque "09h_irrigation" ----------
+          # ---------- Bloque "09h_irrigation" {"state":"ON","on_time":18} menas 180 seconds ----------
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == '09h_irrigation' }}"
@@ -23,15 +23,15 @@ automation:
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":18}  # 180s
+                    {"state":"ON","on_time":18}
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":18}  # 180s
+                    {"state":"ON","on_time":18}
 
 
-          # ---------- Bloque "21h_irrigation" ----------
+          # ---------- Bloque "21h_irrigation" {"state":"ON","on_time":18} menas 180 seconds ----------
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == '21h_irrigation' }}"
@@ -40,9 +40,9 @@ automation:
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":18}  # 180s
+                    {"state":"ON","on_time":18}
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":18}  # 180s
+                    {"state":"ON","on_time":18}
