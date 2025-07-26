@@ -1,0 +1,188 @@
+app-template:
+  controllers:
+    dawarich:
+      strategy: RollingUpdate
+      pod:
+        enableServiceLinks: false
+        # Requires permissions to write in multiple paths as `/var/app/tmp` and `/var/app/db`
+        # securityContext:
+        #   runAsUser: 2000
+        #   runAsGroup: 2000
+        #   runAsNonRoot: true
+        #   fsGroup: 2000
+        #   fsGroupChangePolicy: OnRootMismatch
+      containers:
+        server:
+          image: &image
+            repository: freikin/dawarich
+            tag: 0.29.1
+          env: &env
+            DATABASE_HOST: dawarich-postgres
+            DATABASE_USERNAME:
+              valueFrom:
+                secretKeyRef:
+                  name: dawarich.dawarich-postgres.credentials.postgresql.acid.zalan.do
+                  key: username
+            DATABASE_PASSWORD:
+              valueFrom:
+                secretKeyRef:
+                  name: dawarich.dawarich-postgres.credentials.postgresql.acid.zalan.do
+                  key: password
+            DATABASE_NAME: dawarich
+            TIME_ZONE: "Europe/Madrid"
+            REDIS_URL: redis://dawarich-redis
+            APPLICATION_HOSTS: "dawarich.internal.dbcloud.org,dawarich.dbcloud.org"
+            PROMETHEUS_EXPORTER_ENABLED: "true"
+            PROMETHEUS_EXPORTER_HOST: "127.0.0.1"
+            DISABLE_TELEMETRY: "true"
+            GEOAPIFY_API_KEY:
+              valueFrom:
+                secretKeyRef:
+                  name: dawarich-secrets
+                  key: geoapify_api_key
+            SELF_HOSTED: "true"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+          command:
+            - "web-entrypoint.sh"
+          args:
+            # bin/dev for enabling prometheus exporter
+            # - "bin/rails server -p 3000 -b 0.0.0.0"
+            - "bin/dev"
+          probes:
+            liveness: &probes
+              enabled: true
+              custom: true
+              spec:
+                httpGet: &httpGet
+                  path: /api/v1/health
+                  port: &port 3000
+                initialDelaySeconds: 0
+                periodSeconds: 10
+                timeoutSeconds: 1
+                failureThreshold: 3
+            readiness: *probes
+            startup:
+              enabled: true
+              custom: true
+              spec:
+                httpGet: *httpGet
+                failureThreshold: 30
+                periodSeconds: 10
+        sidekiq:
+          image: *image
+          env:
+            <<: *env
+            PROMETHEUS_EXPORTER_ENABLED: "false"
+          command:
+            - "sidekiq-entrypoint.sh"
+          args:
+            - "bundle exec sidekiq"
+          probes:
+            liveness:
+              enabled: false
+            readiness:
+              enabled: false
+          resources:
+            requests:
+              cpu: 10m
+              memory: 150Mi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+    redis:
+      containers:
+        main:
+          image:
+            repository: public.ecr.aws/docker/library/redis
+            tag: 8.0.3
+          env:
+            REDIS_REPLICATION_MODE: master
+          command: ["redis-server"]
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+
+  service:
+    dawarich:
+      controller: dawarich
+      ports:
+        http:
+          port: *port
+        metrics:
+          port: 9394
+    redis:
+      controller: redis
+      ports:
+        http:
+          port: 6379
+
+  ingress:
+    dawarich:
+      enabled: true
+      className: nginx-internal
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+        external-dns.alpha.kubernetes.io/enabled: "true"
+      hosts:
+        - host: &host dawarich.internal.dbcloud.org
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: dawarich
+                port: http
+      tls:
+        - hosts:
+            - *host
+          secretName: dawarich-tls-certificate
+    external:
+      enabled: true
+      className: nginx-external
+      annotations:
+        external-dns.alpha.kubernetes.io/enabled: "true"
+        external-dns.alpha.kubernetes.io/target: dbcloud.org
+        cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+      hosts:
+        - host: &host dawarich.dbcloud.org
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: dawarich
+                port: http
+      tls:
+        - hosts:
+            - *host
+          secretName: dawarich-external-tls-certificate
+
+  persistence:
+    # Can be migrated to S3
+    imports:
+      enabled: true
+      existingClaim: dawarich-imports
+      advancedMounts:
+        dawarich:
+          server:
+            - path: /var/app/storage
+          sidekiq:
+            - path: /var/app/storage
+  serviceMonitor:
+    server:
+      enabled: true
+      serviceName: dawarich
+      labels:
+        release: monitoring
+      endpoints:
+        - port: metrics
+          scheme: http
+          path: /metrics
+          interval: 30s
+          scrapeTimeout: 10s
