@@ -2,7 +2,7 @@ input_number:
   riego_cristalera_09h:
     name: Riego Cristalera 09h
     min: 0
-    max: 600  # 10 minutos
+    max: 240  # 4 minutos
     step: 10
     unit_of_measurement: s
     initial: 1
@@ -10,7 +10,7 @@ input_number:
   riego_pared_09h:
     name: Riego Pared 09h
     min: 0
-    max: 600
+    max: 240
     step: 10
     unit_of_measurement: s
     initial: 1
@@ -18,7 +18,7 @@ input_number:
   riego_cristalera_21h:
     name: Riego Cristalera 21h
     min: 0
-    max: 600
+    max: 240
     step: 10
     unit_of_measurement: s
     initial: 1
@@ -26,7 +26,7 @@ input_number:
   riego_pared_21h:
     name: Riego Pared 21h
     min: 0
-    max: 600
+    max: 240
     step: 10
     unit_of_measurement: s
     initial: 1
