@@ -50,8 +50,8 @@ automation:
                 value_template: "{{ trigger.id == '09h_irrigation' }}"
             sequence:
               - variables:
-                  cristalera_09h: "{{ states('input_number.riego_cristalera_09h') | float / 10) | round(0) | int }}"
-                  pared_09h: "{{ states('input_number.riego_pared_09h') | float / 10) | round(0) | int }}"
+                  cristalera_09h: "{{ ((states('input_number.riego_cristalera_09h') | float) / 10) | round(0) | int }}"
+                  pared_09h: "{{ ((states('input_number.riego_pared_09h') | float) / 10) | round(0) | int }}"
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
@@ -68,8 +68,8 @@ automation:
                 value_template: "{{ trigger.id == '21h_irrigation' }}"
             sequence:
               - variables:
-                  cristalera_21h: "{{ states('input_number.riego_cristalera_21h') | float / 10) | round(0) | int }}"
-                  pared_21h: "{{ states('input_number.riego_pared_21h') | float / 10) | round(0) | int }}"
+                  cristalera_21h: "{{ ((states('input_number.riego_cristalera_21h') | float) / 10) | round(0) | int }}"
+                  pared_21h: "{{ ((states('input_number.riego_pared_21h') | float) / 10) | round(0) | int }}"
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
@@ -80,3 +80,4 @@ automation:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
                     {"state":"ON","on_time":{{ pared_21h }}}
+
