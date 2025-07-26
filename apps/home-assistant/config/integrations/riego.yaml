@@ -5,7 +5,6 @@ input_number:
     max: 240  # 4 minutos
     step: 10
     unit_of_measurement: s
-    initial: 1
 
   riego_pared_09h:
     name: Riego Pared 09h
@@ -13,7 +12,6 @@ input_number:
     max: 240
     step: 10
     unit_of_measurement: s
-    initial: 1
 
   riego_cristalera_21h:
     name: Riego Cristalera 21h
@@ -21,7 +19,6 @@ input_number:
     max: 240
     step: 10
     unit_of_measurement: s
-    initial: 1
 
   riego_pared_21h:
     name: Riego Pared 21h
@@ -29,7 +26,6 @@ input_number:
     max: 240
     step: 10
     unit_of_measurement: s
-    initial: 1
 
 automation:
   - alias: Riego SWV automático diario  
