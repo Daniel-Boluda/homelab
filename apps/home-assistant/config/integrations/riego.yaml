@@ -1,48 +1,82 @@
+input_number:
+  riego_cristalera_09h:
+    name: Riego Cristalera 09h
+    min: 0
+    max: 600  # 10 minutos
+    step: 10
+    unit_of_measurement: s
+    initial: 1
+
+  riego_pared_09h:
+    name: Riego Pared 09h
+    min: 0
+    max: 600
+    step: 10
+    unit_of_measurement: s
+    initial: 1
+
+  riego_cristalera_21h:
+    name: Riego Cristalera 21h
+    min: 0
+    max: 600
+    step: 10
+    unit_of_measurement: s
+    initial: 1
+
+  riego_pared_21h:
+    name: Riego Pared 21h
+    min: 0
+    max: 600
+    step: 10
+    unit_of_measurement: s
+    initial: 1
+
 automation:
   - alias: Riego SWV automático diario  
     id: "riego_gestion_completa"
-    description: Riega cristalera y salón a las 09:00 y 21:00 con tiempos distintos y apagado local.
+    description: Riega cristalera y salón a las 09:00 y 21:00 con tiempos definidos por input_number.
     trigger:
-      # 1) Riego diario a las 09:00
       - platform: time
         at: "09:05:00"
         id: "09h_irrigation"
-      # 1) Riego diario a las 21:00
       - platform: time
         at: "21:05:00"
         id: "21h_irrigation"
 
     action:
       - choose:
-          # ---------- Bloque "09h_irrigation" {"state":"ON","on_time":18} menas 180 seconds ----------
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == '09h_irrigation' }}"
             sequence:
+              - variables:
+                  cristalera_09h: "{{ states('input_number.riego_cristalera_09h') | float / 10) | round(0) | int }}"
+                  pared_09h: "{{ states('input_number.riego_pared_09h') | float / 10) | round(0) | int }}"
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":18}
+                    {"state":"ON","on_time":{{ cristalera_09h }}}
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":18}
+                    {"state":"ON","on_time":{{ pared_09h }}}
 
-
-          # ---------- Bloque "21h_irrigation" {"state":"ON","on_time":18} menas 180 seconds ----------
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == '21h_irrigation' }}"
             sequence:
+              - variables:
+                  cristalera_21h: "{{ states('input_number.riego_cristalera_21h') | float / 10) | round(0) | int }}"
+                  pared_21h: "{{ states('input_number.riego_pared_21h') | float / 10) | round(0) | int }}"
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_cristalera/set"
                   payload: >
-                    {"state":"ON","on_time":18}
+                    {"state":"ON","on_time":{{ cristalera_21h }}}
               - service: mqtt.publish
                 data:
                   topic: "zigbee2mqtt/riego_pared/set"
                   payload: >
-                    {"state":"ON","on_time":18}
+                    {"state":"ON","on_time":{{ pared_21h }}}
