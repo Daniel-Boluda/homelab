@@ -20,7 +20,7 @@ app-template:
         esphome:
           image:
             repository: ghcr.io/esphome/esphome
-            tag: 2025.6.3@sha256:6a938e900f3ac586de0d44bbba6e19cf88fc76601465e34ab2180f8a6329dbc4
+            tag: 2025.7.4@sha256:ba9f7a09e42720fbec9d92a6467a1d017b852e813bdacd7fc50c4de5d96486e9
           env:
             ESPHOME_DASHBOARD_USE_PING: "true"
           resources:
