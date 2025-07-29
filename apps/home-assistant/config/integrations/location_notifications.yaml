@@ -23,11 +23,11 @@ automation:
         event: enter
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
-        zone: zone.hospital_gu
+        zone: zone.hospital_gomez_ulla
         event: enter
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
-        zone: zone.hospital_gu
+        zone: zone.hospital_gomez_ulla
         event: leave
     condition: []
     action:
@@ -127,13 +127,13 @@ automation:
                 value_template: >
                   {{ trigger.platform == 'zone' and
                      trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.zone == 'zone.hospital_gomez_ulla' and
                      trigger.event == 'enter' }}
               - condition: not
                 conditions:
                   - condition: state
                     entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.hospital_gu"
+                    state: "zone.hospital_gomez_ulla"
             sequence:
               - service: notify.mobile_app_sm_a256b
                 data:
@@ -145,13 +145,13 @@ automation:
                 value_template: >
                   {{ trigger.platform == 'zone' and
                      trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.hospital_gu' and
+                     trigger.zone == 'zone.hospital_gomez_ulla' and
                      trigger.event == 'leave' }}
               - condition: not
                 conditions:
                   - condition: state
                     entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.hospital_gu"
+                    state: "zone.hospital_gomez_ulla"
             sequence:
               - service: notify.mobile_app_sm_a256b
                 data:
