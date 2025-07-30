@@ -19,7 +19,6 @@ automation:
                 value_template: >
                   {{ trigger.to_state.state == 'none' }}
             sequence:
-              - delay: "00:00:05"
               - service: switch.turn_off
                 target:
                   entity_id: switch.luz_pasillo
