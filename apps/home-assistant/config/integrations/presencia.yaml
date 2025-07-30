@@ -1,0 +1,26 @@
+automation:
+  - alias: Luz pasillo según presencia
+    trigger:
+      - platform: state
+        entity_id: sensor.presence_detector_motion_state
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state in ['small', 'large'] }}
+            sequence:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.luz_pasillo
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ trigger.to_state.state == 'none' }}
+            sequence:
+              - delay: "00:00:05"
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.luz_pasillo
+    mode: restart
