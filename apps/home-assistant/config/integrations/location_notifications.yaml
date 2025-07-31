@@ -5,40 +5,48 @@ automation:
         entity_id: person.daniel_boluda_fdez_gmail_com
         zone: zone.supera_rivas
         event: enter
+        id: "daniel_superarivas_enter"
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.supera_rivas
         event: enter
-      - platform: zone
-        entity_id: person.daniel_boluda_fdez_gmail_com
-        zone: zone.badminton
-        event: enter
+        id: "lucia_superarivas_enter"
       - platform: zone
         entity_id: person.daniel_boluda_fdez_gmail_com
         zone: zone.home
         event: enter
+        id: "daniel_home_enter"
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.home
         event: enter
+        id: "lucia_home_enter"
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.hospital_gomez_ulla
         event: enter
+        id: "lucia_gomezulla_enter"
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.hospital_gomez_ulla
         event: leave
+        id: "lucia_gomezulla_leave"
+      - platform: zone
+        entity_id: person.daniel_boluda_fdez_gmail_com
+        zone: zone.mercadona
+        event: enter
+        id: "daniel_mercadona_enter"
+      - platform: zone
+        entity_id: person.pizarroservanlucia_gmail_com
+        zone: zone.mercadona
+        event: enter
+        id: "lucia_mercadona_enter"
     condition: []
     action:
       - choose:
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
-                     trigger.zone == 'zone.supera_rivas' and
-                     trigger.event == 'enter' }}
+                value_template: "{{ trigger.id == 'daniel_superarivas_enter' }}"
               - condition: not
                 conditions:
                   - condition: state
@@ -52,11 +60,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.supera_rivas' and
-                     trigger.event == 'enter' }}
+                value_template: "{{ trigger.id == 'lucia_superarivas_enter' }}"
               - condition: not
                 conditions:
                   - condition: state
@@ -70,29 +74,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
-                     trigger.zone == 'zone.badminton' and
-                     trigger.event == 'enter' }}
-              - condition: not
-                conditions:
-                  - condition: state
-                    entity_id: person.pizarroservanlucia_gmail_com
-                    state: "zone.badminton"
-            sequence:
-              - service: notify.mobile_app_iphone_de_lucia
-                data:
-                  message: "Daniel ha llegado a Badminton."
-                  title: "Ubicación"
-
-          - conditions:
-              - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.daniel_boluda_fdez_gmail_com' and
-                     trigger.zone == 'zone.home' and
-                     trigger.event == 'enter' }}
+                value_template: "{{ trigger.id == 'daniel_home_enter' }}"
               - condition: not
                 conditions:
                   - condition: state
@@ -106,11 +88,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.home' and
-                     trigger.event == 'enter' }}
+                value_template: "{{ trigger.id == 'lucia_home_enter' }}"
               - condition: not
                 conditions:
                   - condition: state
@@ -124,16 +102,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.hospital_gomez_ulla' and
-                     trigger.event == 'enter' }}
-              - condition: not
-                conditions:
-                  - condition: state
-                    entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.hospital_gomez_ulla"
+                value_template: "{{ trigger.id == 'lucia_gomezulla_enter' }}"
             sequence:
               - service: notify.mobile_app_sm_a256b
                 data:
@@ -142,19 +111,54 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: >
-                  {{ trigger.platform == 'zone' and
-                     trigger.entity_id == 'person.pizarroservanlucia_gmail_com' and
-                     trigger.zone == 'zone.hospital_gomez_ulla' and
-                     trigger.event == 'leave' }}
-              - condition: not
-                conditions:
-                  - condition: state
-                    entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.hospital_gomez_ulla"
+                value_template: "{{ trigger.id == 'lucia_gomezulla_leave' }}"
             sequence:
               - service: notify.mobile_app_sm_a256b
                 data:
                   message: "Lucía ha salido del Hospital GU."
                   title: "Ubicación"
+
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'daniel_mercadona_enter' }}"
+            sequence:
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "¿Quieres abrir la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.pizarroservanlucia_gmail_com
+                    state: "zone.mercadona"
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "Daniel está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'lucia_mercadona_enter' }}"
+            sequence:
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "¿Quieres abrir la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: person.daniel_boluda_fdez_gmail_com
+                    state: "zone.mercadona"
+              - service: notify.mobile_app_sm_a256b
+                data:
+                  message: "Lucía está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
+                  title: "Lista de la compra"
+                  data:
+                    clickAction: "/shopping-list"
     mode: single
