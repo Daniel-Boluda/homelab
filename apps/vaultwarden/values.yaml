@@ -8,7 +8,7 @@ app-template:
         vaultwarden:
           image:
             repository: vaultwarden/server
-            tag: 1.34.1
+            tag: 1.34.3
 
           env:
             TZ: Europe/Madrid
