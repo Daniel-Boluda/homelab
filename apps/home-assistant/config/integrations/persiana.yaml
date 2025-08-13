@@ -5,19 +5,19 @@ automation:
     trigger:
       - platform: time
         at: "13:00:00"
-        id: "sube_40"
+        id: "persianas_13h"
       - platform: time
         at: "21:00:00"
-        id: "abrir"
+        id: "persianas_21h"
       - platform: time
-        at: "23:00:00"
-        id: "cerrar_dormitorio"
+        at: "23:30:00"
+        id: "persianas_23h"
     condition: []
     action:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ trigger.id == 'sube_40' }}"
+                value_template: "{{ trigger.id == 'persianas_13h' }}"
             sequence:
               - service: cover.set_cover_position
                 target:
@@ -37,7 +37,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: "{{ trigger.id == 'abrir' }}"
+                value_template: "{{ trigger.id == 'persianas_21h' }}"
             sequence:
               - service: cover.set_cover_position
                 target:
@@ -57,7 +57,7 @@ automation:
 
           - conditions:
               - condition: template
-                value_template: "{{ trigger.id == 'cerrar_dormitorio' }}"
+                value_template: "{{ trigger.id == 'persianas_23h' }}"
             sequence:
               - service: cover.set_cover_position
                 target:

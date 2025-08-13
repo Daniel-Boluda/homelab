@@ -1,0 +1,53 @@
+automation:
+  - alias: Recordatorio tapa inodoro
+    description: "Si la tapa del inodoro está vertical y la luz apagada, enviar recordatorio."
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.tapa_inhodoro_aseo_z
+          - sensor.tapa_inhodoro_bano_z
+          - switch.luz_banera
+          - switch.luz_aseo
+          - switch.luz_bano_dormitorio
+          - switch.luz_ducha_dormitorio
+    condition: []
+    action:
+      - choose:
+          # Aseo
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.tapa_inhodoro_aseo_z
+                below: 100
+              - condition: state
+                entity_id: switch.luz_banera
+                state: "off"
+              - condition: state
+                entity_id: switch.luz_aseo
+                state: "off"
+            sequence:
+              - service: notify.send_message
+                data:
+                  message: "Recuerda bajar la tapa del inodoro del aseo."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
+
+          # Baño
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.tapa_inhodoro_bano_z
+                below: 100
+              - condition: state
+                entity_id: switch.luz_bano_dormitorio
+                state: "off"
+              - condition: state
+                entity_id: switch.luz_ducha_dormitorio
+                state: "off"
+            sequence:
+              - service: notify.send_message
+                data:
+                  message: "Recuerda bajar la tapa del inodoro del baño."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28

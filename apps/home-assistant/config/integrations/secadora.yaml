@@ -38,6 +38,12 @@ automation:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
                   message: "⚠️ La secadora ha terminado de secar pero sigue encendida."
+              - service: notify.send_message
+                data:
+                  message: "La secadora ha terminado de secar pero sigue encendida."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
               - service: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.secadora_last_notification
@@ -60,6 +66,12 @@ automation:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
                   message: "⏳ La secadora sigue encendida sin funcionar desde hace más de 30 minutos."
+              - service: notify.send_message
+                data:
+                  message: "La secadora sigue encendida sin funcionar desde hace más de 30 minutos."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
               - service: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.secadora_last_notification
