@@ -8,4 +8,4 @@ collections:
     version: 11.2.0
 
   - name: community.crypto
-    version: 3.0.1
+    version: 3.0.3
