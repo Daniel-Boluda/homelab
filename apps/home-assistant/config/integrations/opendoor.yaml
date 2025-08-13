@@ -20,7 +20,7 @@ automation:
                             entity_id: person.daniel_boluda_fdez_gmail_com
                             state: "home"
                     sequence:
-                      - service: notify.mobile_app_sm_a256b
+                      - service: notify.mobile_app_a25_daniel_boluda 
                         data:
                           message: "Se ha abierto la puerta de la entrada!"
               - choose:
@@ -58,7 +58,7 @@ automation:
                             entity_id: person.daniel_boluda_fdez_gmail_com
                             state: "home"
                     sequence:
-                      - service: notify.mobile_app_sm_a256b
+                      - service: notify.mobile_app_a25_daniel_boluda 
                         data:
                           message: "Se ha cerrado la puerta de la entrada!"
               - choose:

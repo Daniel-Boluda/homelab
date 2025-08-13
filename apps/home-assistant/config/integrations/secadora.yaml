@@ -32,7 +32,7 @@ automation:
               - condition: template
                 value_template: >
                   {{ states('sensor.enchufe_secadora_relay_power') | float(0) >= 2 and states('sensor.enchufe_secadora_relay_power') | float(0) <= 10 }}
-              - service: notify.mobile_app_sm_a256b
+              - service: notify.mobile_app_a25_daniel_boluda 
                 data:
                   message: "⚠️ La secadora ha terminado de secar pero sigue encendida."
               - service: notify.mobile_app_iphone_de_lucia
@@ -54,7 +54,7 @@ automation:
                 value_template: >
                   {{ (now_ts - last_notification) > 1800 }}   # 1800 segundos = 30 min
             sequence:
-              - service: notify.mobile_app_sm_a256b
+              - service: notify.mobile_app_a25_daniel_boluda 
                 data:
                   message: "⏳ La secadora sigue encendida sin funcionar desde hace más de 30 minutos."
               - service: notify.mobile_app_iphone_de_lucia
