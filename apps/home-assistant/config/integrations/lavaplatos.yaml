@@ -1,0 +1,16 @@
+automation:
+  - alias: Aviso lavaplatos terminado
+    description: "Avisar cuando el lavaplatos haya terminado."
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: sensor.lavaplatos_bosch_programa_finalizado
+        to: "Encendido"
+    condition: []
+    action:
+      - service: notify.send_message
+        data:
+          message: "El lavaplatos ha terminado."
+        target:
+          device_id:
+            - 54e59c960e82f66b7a554608a8e30f28
