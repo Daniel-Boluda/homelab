@@ -5,7 +5,7 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.lavadora_samsung_estado_de_la_maquina
-        to: "Detenido"
+        to: "finish"
     condition:
       - condition: state
         entity_id: input_boolean.home_announcements_active
