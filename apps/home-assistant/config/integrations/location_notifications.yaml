@@ -1,5 +1,6 @@
 automation:
   - alias: Notificaciones ubicaciones clave con presencia
+    mode: single
     trigger:
       - platform: zone
         entity_id: person.daniel_boluda_fdez_gmail_com
@@ -21,6 +22,10 @@ automation:
         zone: zone.home
         event: enter
         id: "lucia_home_enter"
+      - platform: numeric_state
+        entity_id: zone.home
+        below: 1
+        id: "home_nobody"
       - platform: zone
         entity_id: person.pizarroservanlucia_gmail_com
         zone: zone.hospital_gomez_ulla
@@ -41,103 +46,119 @@ automation:
         zone: zone.mercadona
         event: enter
         id: "lucia_mercadona_enter"
-    condition: []
+
     action:
       - choose:
+          # Daniel entra en Supera Rivas (notifica a Lucía si ella no está allí)
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'daniel_superarivas_enter' }}"
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.pizarroservanlucia_gmail_com
-                    state: "zone.supera_rivas"
+                    zone: zone.supera_rivas
             sequence:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
-                  message: "Daniel ha llegado a Supera Rivas."
                   title: "Ubicación"
+                  message: "Daniel ha llegado a Supera Rivas."
 
+          # Lucía entra en Supera Rivas (notifica a Daniel si él no está allí)
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_superarivas_enter' }}"
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.supera_rivas"
+                    zone: zone.supera_rivas
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "Lucía ha llegado a Supera Rivas."
                   title: "Ubicación"
+                  message: "Lucía ha llegado a Supera Rivas."
 
+          # Daniel entra en casa (notifica a Lucía si ella no está en casa)
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'daniel_home_enter' }}"
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.pizarroservanlucia_gmail_com
-                    state: "zone.home"
+                    zone: zone.home
             sequence:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
-                  message: "Daniel ha llegado a casa."
                   title: "Ubicación"
+                  message: "Daniel ha llegado a casa."
 
+          # Lucía entra en casa (notifica a Daniel si él no está en casa)
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_home_enter' }}"
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.home"
+                    zone: zone.home
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "Lucía ha llegado a casa."
                   title: "Ubicación"
+                  message: "Lucía ha llegado a casa."
 
+          # Nadie en casa -> activar modo fuera
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'home_nobody' }}"
+            sequence:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.modo_fuera_de_casa_stateful_scene
+
+          # Lucía entra/sale del Hospital Gómez Ulla
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_gomezulla_enter' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "Lucía ha llegado al Hospital GU."
                   title: "Ubicación"
-
+                  message: "Lucía ha llegado al Hospital GU."
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_gomezulla_leave' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "Lucía ha salido del Hospital GU."
                   title: "Ubicación"
+                  message: "Lucía ha salido del Hospital GU."
 
+          # Mercadona: al entrar uno, sugiere lista y avisa al otro si no está allí
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'daniel_mercadona_enter' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "¿Quieres abrir la lista de la compra?"
                   title: "Lista de la compra"
+                  message: "¿Quieres abrir la lista de la compra?"
                   data:
-                    clickAction: "/shopping-list"
+                    url: "/shopping-list"        # iOS
+                    clickAction: "/shopping-list" # Android
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.pizarroservanlucia_gmail_com
-                    state: "zone.mercadona"
+                    zone: zone.mercadona
               - service: notify.mobile_app_iphone_de_lucia
                 data:
-                  message: "Daniel está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
                   title: "Lista de la compra"
+                  message: "Daniel está en Mercadona. ¿Quieres añadir algo?"
                   data:
+                    url: "/shopping-list"
                     clickAction: "/shopping-list"
 
           - conditions:
@@ -146,19 +167,20 @@ automation:
             sequence:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
-                  message: "¿Quieres abrir la lista de la compra?"
                   title: "Lista de la compra"
+                  message: "¿Quieres abrir la lista de la compra?"
                   data:
+                    url: "/shopping-list"
                     clickAction: "/shopping-list"
               - condition: not
                 conditions:
-                  - condition: state
+                  - condition: zone
                     entity_id: person.daniel_boluda_fdez_gmail_com
-                    state: "zone.mercadona"
-              - service: notify.mobile_app_a25_daniel_boluda 
+                    zone: zone.mercadona
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
-                  message: "Lucía está en Mercadona. ¿Quieres añadir algo a la lista de la compra?"
                   title: "Lista de la compra"
+                  message: "Lucía está en Mercadona. ¿Quieres añadir algo?"
                   data:
+                    url: "/shopping-list"
                     clickAction: "/shopping-list"
-    mode: single
