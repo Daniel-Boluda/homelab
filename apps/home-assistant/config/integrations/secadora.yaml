@@ -1,10 +1,11 @@
 input_select:
-  secadora_status:
-    name: Estado secadora
+  secadora_status_internal:
+    name: Estado secadora (interno)
     options:
       - Apagada
       - Standby
       - Secando
+    initial: Apagada
     icon: mdi:tumble-dryer
 
 input_datetime:
@@ -13,130 +14,99 @@ input_datetime:
     has_date: true
     has_time: true
 
+# Sensor de solo lectura para la UI
+template:
+  - sensor:
+      - name: "secadora_status"
+        unique_id: secadora_status
+        icon: mdi:tumble-dryer
+        state: "{{ states('input_select.secadora_status_internal') }}"
+
 automation:
-  - alias: Control completo secadora
-    description: Maneja cambios de estado y notificaciones en una sola automatización
-    mode: restart
+  - alias: Control secadora simple (sin histéresis)
+    description: Actualiza estado inmediato por potencia y envía avisos (Standby>10 min y Secando→Standby)
+    mode: single
     trigger:
-      # --- Subida inmediata ---
-      - platform: numeric_state
-        entity_id: sensor.enchufe_secadora_relay_power
-        above: 10
-        id: "subir_secando"
-      - platform: numeric_state
-        entity_id: sensor.enchufe_secadora_relay_power
-        above: 2
-        below: 10
-        id: "subir_standby"
-
-      # --- Bajada con retardo ---
-      - platform: numeric_state
-        entity_id: sensor.enchufe_secadora_relay_power
-        below: 10
-        above: 2
-        id: "bajar_secando_a_standby"
-      - platform: numeric_state
-        entity_id: sensor.enchufe_secadora_relay_power
-        below: 2
-        id: "bajar_standby_a_apagada"
-
-      # --- Aviso standby 10 min ---
+      # Recalcular estado siempre que cambie la potencia
       - platform: state
-        entity_id: input_select.secadora_status
+        entity_id: sensor.enchufe_secadora_relay_power
+        id: "actualizar_estado"
+
+      # Aviso si lleva 10 min en Standby
+      - platform: state
+        entity_id: input_select.secadora_status_internal
         to: "Standby"
         for: "00:10:00"
         id: "aviso_standby_largo"
 
-    condition: []
+      # Aviso cuando pasa de Secando a Standby
+      - platform: state
+        entity_id: input_select.secadora_status_internal
+        from: "Secando"
+        to: "Standby"
+        id: "aviso_fin_secado"
+
     action:
       - choose:
-          # Subida a Secando (inmediata)
+          # 1) Actualizar estado en función de la potencia (inmediato)
           - conditions:
               - condition: template
-                value_template: "{{ trigger.id == 'subir_secando' }}"
+                value_template: "{{ trigger.id == 'actualizar_estado' }}"
             sequence:
+              - variables:
+                  power: "{{ states('sensor.enchufe_secadora_relay_power') | float(0) }}"
+                  current: "{{ states('input_select.secadora_status_internal') }}"
+                  next: >-
+                    {% if power < 2 %}Apagada
+                    {% elif power > 10 %}Secando
+                    {% else %}Standby
+                    {% endif %}
+              # Solo cambia si realmente hay cambio
+              - condition: template
+                value_template: "{{ current != next }}"
               - service: input_select.select_option
                 target:
-                  entity_id: input_select.secadora_status
+                  entity_id: input_select.secadora_status_internal
                 data:
-                  option: Secando
+                  option: "{{ next }}"
               - service: input_datetime.set_datetime
                 target:
                   entity_id: input_datetime.secadora_last_status_change
                 data:
                   timestamp: "{{ now().timestamp() }}"
 
-          # Subida a Standby (inmediata)
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'subir_standby' }}"
-            sequence:
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.secadora_status
-                data:
-                  option: Standby
-              - service: input_datetime.set_datetime
-                target:
-                  entity_id: input_datetime.secadora_last_status_change
-                data:
-                  timestamp: "{{ now().timestamp() }}"
-
-          # Bajada de Secando a Standby (2 min)
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'bajar_secando_a_standby' and states('input_select.secadora_status') == 'Secando' }}"
-            sequence:
-              - delay: "00:02:00"
-              - condition: numeric_state
-                entity_id: sensor.enchufe_secadora_relay_power
-                below: 10
-                above: 2
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.secadora_status
-                data:
-                  option: Standby
-              - service: input_datetime.set_datetime
-                target:
-                  entity_id: input_datetime.secadora_last_status_change
-                data:
-                  timestamp: "{{ now().timestamp() }}"
-              - service: notify.send_message
-                data:
-                  message: "⚠️ La secadora ha terminado y está en standby."
-                target:
-                  device_id:
-                    - 54e59c960e82f66b7a554608a8e30f28
-
-          # Bajada de Standby a Apagada (2 min)
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'bajar_standby_a_apagada' and states('input_select.secadora_status') == 'Standby' }}"
-            sequence:
-              - delay: "00:02:00"
-              - condition: numeric_state
-                entity_id: sensor.enchufe_secadora_relay_power
-                below: 2
-              - service: input_select.select_option
-                target:
-                  entity_id: input_select.secadora_status
-                data:
-                  option: Apagada
-              - service: input_datetime.set_datetime
-                target:
-                  entity_id: input_datetime.secadora_last_status_change
-                data:
-                  timestamp: "{{ now().timestamp() }}"
-
-          # Aviso si standby más de 10 min
+          # 2) Aviso: Standby > 10 minutos
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'aviso_standby_largo' }}"
             sequence:
-              - service: notify.send_message
+              - service: notify.mobile_app_a25_daniel_boluda
                 data:
                   message: "⏳ La secadora lleva más de 10 minutos en standby."
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "⏳ La secadora lleva más de 10 minutos en standby."
+              - service: notify.send_message
+                data:
+                  message: "La secadora lleva más de 10 minutos en standby."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
+
+          # 3) Aviso: paso de Secando → Standby
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'aviso_fin_secado' }}"
+            sequence:
+              - service: notify.mobile_app_a25_daniel_boluda
+                data:
+                  message: "✅ La secadora ha terminado y está en standby."
+              - service: notify.mobile_app_iphone_de_lucia
+                data:
+                  message: "✅ La secadora ha terminado y está en standby."
+              - service: notify.send_message
+                data:
+                  message: "La secadora ha terminado y está en standby."
                 target:
                   device_id:
                     - 54e59c960e82f66b7a554608a8e30f28
