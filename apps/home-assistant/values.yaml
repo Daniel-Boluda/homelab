@@ -11,7 +11,7 @@ app-template:
         hass:
           image:
             repository: ghcr.io/home-operations/home-assistant
-            tag: 2025.7.2@sha256:1ccea0e903924bb3198f130b4018ff27315b03fbbe343c3f4aee289b5050660e
+            tag: 2025.8.1@sha256:4e59d68e002d84a8e48f77df029ecd629fd444f57601931cca39a4ee08a45eec
           env:
             TZ: Europe/Madrid
             POSTGRES_USER:
