@@ -6,7 +6,10 @@ automation:
       - platform: state
         entity_id: sensor.lavadora_samsung_estado_de_la_maquina
         to: "Detenido"
-    condition: []
+    condition:
+      - condition: state
+        entity_id: input_boolean.home_announcements_active
+        state: "on"
     action:
       - service: notify.send_message
         data:

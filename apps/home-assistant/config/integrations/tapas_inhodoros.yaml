@@ -25,6 +25,9 @@ automation:
               - condition: state
                 entity_id: switch.luz_aseo
                 state: "off"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
               - service: notify.send_message
                 data:
@@ -44,6 +47,9 @@ automation:
               - condition: state
                 entity_id: switch.luz_ducha_dormitorio
                 state: "off"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
               - service: notify.send_message
                 data:

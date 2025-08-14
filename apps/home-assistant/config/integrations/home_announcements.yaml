@@ -1,0 +1,59 @@
+input_boolean:
+  home_announcements_active:
+    name: Home Announcements Active
+    icon: mdi:bullhorn
+
+automation:
+  - alias: Control no molestar por guardia
+    description: Activa a las 23:30 y desactiva según si Lucía tuvo guardia
+    mode: single
+    trigger:
+      # Desactivar a las 23:30
+      - platform: time
+        at: "23:30:00"
+        id: "activar"
+
+      # Activar a las 12:00 si no hay guardia
+      - platform: time
+        at: "12:00:00"
+        id: "desactivar_sin_guardia"
+
+      # Activar a las 15:00 si hay guardia
+      - platform: time
+        at: "15:00:00"
+        id: "desactivar_con_guardia"
+
+    action:
+      - choose:
+          # Desactivar no molestar
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'activar' }}"
+            sequence:
+              - service: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.home_announcements_active
+
+          # Activar a las 12 si no hay guardia
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'desactivar_sin_guardia' }}"
+              - condition: state
+                entity_id: input_boolean.lucia_guardia_nocturna
+                state: "off"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.home_announcements_active
+
+          # Activar a las 15 si hay guardia
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'desactivar_con_guardia' }}"
+              - condition: state
+                entity_id: input_boolean.lucia_guardia_nocturna
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.home_announcements_active

@@ -1,3 +1,8 @@
+input_boolean:
+  lucia_guardia_nocturna:
+    name: Lucía guardia nocturna
+    icon: mdi:briefcase-clock
+
 automation:
   - alias: Notificaciones ubicaciones clave con presencia
     mode: single
@@ -46,6 +51,10 @@ automation:
         zone: zone.mercadona
         event: enter
         id: "lucia_mercadona_enter"
+      # Nuevo trigger: check guardia a la 01:00
+      - platform: time
+        at: "01:00:00"
+        id: "check_lucia_guardia"
 
     action:
       - choose:
@@ -127,6 +136,7 @@ automation:
                 data:
                   title: "Ubicación"
                   message: "Lucía ha llegado al Hospital GU."
+
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_gomezulla_leave' }}"
@@ -146,8 +156,8 @@ automation:
                   title: "Lista de la compra"
                   message: "¿Quieres abrir la lista de la compra?"
                   data:
-                    url: "/shopping-list"        # iOS
-                    clickAction: "/shopping-list" # Android
+                    url: "/shopping-list"
+                    clickAction: "/shopping-list"
               - condition: not
                 conditions:
                   - condition: zone
@@ -184,3 +194,22 @@ automation:
                   data:
                     url: "/shopping-list"
                     clickAction: "/shopping-list"
+
+          # Guardia nocturna Lucía
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'check_lucia_guardia' }}"
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: zone
+                        entity_id: person.pizarroservanlucia_gmail_com
+                        zone: zone.hospital_gomez_ulla
+                    sequence:
+                      - service: input_boolean.turn_on
+                        target:
+                          entity_id: input_boolean.lucia_guardia_nocturna
+                default:
+                  - service: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.lucia_guardia_nocturna

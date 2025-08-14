@@ -79,13 +79,10 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'aviso_standby_largo' }}"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
-                data:
-                  message: "⏳ La secadora lleva más de 10 minutos en standby."
-              - service: notify.mobile_app_iphone_de_lucia
-                data:
-                  message: "⏳ La secadora lleva más de 10 minutos en standby."
               - service: notify.send_message
                 data:
                   message: "La secadora lleva más de 10 minutos en standby."
@@ -97,13 +94,10 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'aviso_fin_secado' }}"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
-                data:
-                  message: "✅ La secadora ha terminado y está en standby."
-              - service: notify.mobile_app_iphone_de_lucia
-                data:
-                  message: "✅ La secadora ha terminado y está en standby."
               - service: notify.send_message
                 data:
                   message: "La secadora ha terminado y está en standby."
