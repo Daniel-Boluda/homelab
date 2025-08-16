@@ -43,7 +43,6 @@ automation:
       - platform: state
         entity_id: input_select.secadora_status_internal
         from: "Secando"
-        to: "Standby"
         id: "aviso_fin_secado"
 
     action:
@@ -57,7 +56,7 @@ automation:
                   power: "{{ states('sensor.enchufe_secadora_relay_power') | float(0) }}"
                   current: "{{ states('input_select.secadora_status_internal') }}"
                   next: >-
-                    {% if power < 2 %}Apagada
+                    {% if power < 1 %}Apagada
                     {% elif power > 10 %}Secando
                     {% else %}Standby
                     {% endif %}

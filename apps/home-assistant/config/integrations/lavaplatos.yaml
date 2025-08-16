@@ -5,7 +5,7 @@ automation:
     trigger:
       - platform: state
         entity_id: sensor.lavaplatos_bosch_programa_finalizado
-        to: "Encendido"
+        to: "confirmed"
     condition:
       - condition: state
         entity_id: input_boolean.home_announcements_active
