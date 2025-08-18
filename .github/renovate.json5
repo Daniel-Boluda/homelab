@@ -106,7 +106,7 @@
       matchCurrentVersion: '!/^0/',
       automerge: true,
       ignoreTests: true,
-      automergeType: 'pr',
+      automergeType: 'branch',
       platformAutomerge: true,
     },
     {
@@ -118,7 +118,7 @@
       ],
       automerge: true,
       ignoreTests: true,
-      automergeType: 'pr',
+      automergeType: 'branch',
       platformAutomerge: true,
     },
     {
@@ -146,7 +146,7 @@
       ],
       matchCurrentVersion: '!/^0/',
       automerge: true,
-      automergeType: 'pr',
+      automergeType: 'branch',
       ignoreTests: true,
       platformAutomerge: true,
     },
@@ -176,7 +176,7 @@
         'minor',
       ],
       matchPackageNames: [
-        '/kanidm/',
+        '/keycloak/',
         '/appdaemon/',
       ],
       matchCurrentVersion: '!/^0/',
