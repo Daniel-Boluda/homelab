@@ -24,16 +24,25 @@ automation:
                   entity_id: cover.persiana_despacho
                 data:
                   position: 60
-              - service: cover.set_cover_position
-                target:
-                  entity_id: cover.persiana_dormitorio
-                data:
-                  position: 40
+
               - service: cover.set_cover_position
                 target:
                   entity_id: cover.persiana_invitados
                 data:
                   position: 40
+
+              # Solo dormitorio si lucia_guardia_nocturna está OFF
+              - choose:
+                  - conditions:
+                      - condition: state
+                        entity_id: input_boolean.lucia_guardia_nocturna
+                        state: "off"
+                    sequence:
+                      - service: cover.set_cover_position
+                        target:
+                          entity_id: cover.persiana_dormitorio
+                        data:
+                          position: 40
 
           - conditions:
               - condition: template
