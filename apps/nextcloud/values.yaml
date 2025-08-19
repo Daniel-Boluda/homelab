@@ -1,7 +1,7 @@
 nextcloud:
   image:
     repository: nextcloud
-    tag: 31.0.7
+    tag: 31.0.8
 
   deploymentLabels:
     backup/retain: quaterly
@@ -261,7 +261,7 @@ app-template:
         redis:
           image:
             repository: redis
-            tag: 8.2.0
+            tag: 8.2.1
 
           command:
             - sh
