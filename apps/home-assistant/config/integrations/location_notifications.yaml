@@ -83,7 +83,7 @@ automation:
                     entity_id: person.daniel_boluda_fdez_gmail_com
                     zone: zone.supera_rivas
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Ubicación"
                   message: "Lucía ha llegado a Supera Rivas."
@@ -113,7 +113,7 @@ automation:
                     entity_id: person.daniel_boluda_fdez_gmail_com
                     zone: zone.home
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Ubicación"
                   message: "Lucía ha llegado a casa."
@@ -132,7 +132,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_gomezulla_enter' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Ubicación"
                   message: "Lucía ha llegado al Hospital GU."
@@ -141,7 +141,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger.id == 'lucia_gomezulla_leave' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Ubicación"
                   message: "Lucía ha salido del Hospital GU."
@@ -151,7 +151,7 @@ automation:
               - condition: template
                 value_template: "{{ trigger.id == 'daniel_mercadona_enter' }}"
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Lista de la compra"
                   message: "¿Quieres abrir la lista de la compra?"
@@ -187,7 +187,7 @@ automation:
                   - condition: zone
                     entity_id: person.daniel_boluda_fdez_gmail_com
                     zone: zone.mercadona
-              - service: notify.mobile_app_a25_daniel_boluda
+              - service: notify.mobile_app_daniel_boluda
                 data:
                   title: "Lista de la compra"
                   message: "Lucía está en Mercadona. ¿Quieres añadir algo?"

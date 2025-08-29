@@ -80,7 +80,7 @@ automation:
                     is_state('input_boolean.pildora_lucia_taken', 'off') 
                   }}
             sequence:
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_daniel_boluda 
                 data:
                   title: "Alerta: píldora no tomada"
                   message: "Lucía aún no ha tomado su píldora hoy."
@@ -96,7 +96,7 @@ automation:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
                   message: "✅ Has marcado tu píldora como tomada."
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_daniel_boluda 
                 data:
                   message: "✅ Lucia ha tomado su pildora."
 
@@ -111,7 +111,7 @@ automation:
               - service: notify.mobile_app_iphone_de_lucia
                 data:
                   message: "👍 Entendido, hoy no podrás tomar tu píldora. No recibirás más recordatorios."
-              - service: notify.mobile_app_a25_daniel_boluda 
+              - service: notify.mobile_app_daniel_boluda 
                 data:
                   title: "Aviso: Píldora Lucía"
                   message: "Lucía ha indicado que no podrá tomar su píldora hoy."
