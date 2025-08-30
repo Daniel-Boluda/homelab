@@ -1,0 +1,40 @@
+automation:
+  - alias: Botones Zigbee - acciones
+    description: Automatización central para varios botones Zigbee
+    mode: single
+    trigger:
+      # Botón encimera - single
+      - platform: device
+        domain: mqtt
+        device_id: 9dda14043bae72c9cee67dee384a2faa
+        type: action
+        subtype: single
+        id: boton_encimera_single
+
+      # Aquí podrías añadir otros botones o acciones:
+      # - platform: device
+      #   domain: mqtt
+      #   device_id: XXXXX
+      #   type: action
+      #   subtype: single
+      #   id: otro_boton_single
+
+    action:
+      - choose:
+          # Botón encimera → toggle luz
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'boton_encimera_single' }}"
+            sequence:
+              - service: switch.toggle
+                target:
+                  entity_id: switch.luz_encimera
+
+          # Ejemplo para otro botón en el futuro
+          # - conditions:
+          #     - condition: template
+          #       value_template: "{{ trigger.id == 'otro_boton_single' }}"
+          #   sequence:
+          #     - service: light.toggle
+          #       target:
+          #         entity_id: light.otra_luz
