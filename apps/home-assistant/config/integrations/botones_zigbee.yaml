@@ -19,6 +19,14 @@ automation:
         subtype: single
         id: boton_mesilla_lucia_single
 
+      # Botón mesilla Lucía - double
+      - platform: device
+        domain: mqtt
+        device_id: a0bbf46c3e2b62d7e82e5a62cae70ef7
+        type: action
+        subtype: double
+        id: boton_mesilla_lucia_double
+
       # Botón entrada - single
       - platform: device
         domain: mqtt
@@ -53,7 +61,19 @@ automation:
             sequence:
               - service: notify.send_message
                 data:
-                  message: "Lucia necesita abrazos."
+                  message: "El amor de tu vida necesita abrazos."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
+
+          # Botón mesilla Lucía → aviso
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'boton_mesilla_lucia_double' }}"
+            sequence:
+              - service: notify.send_message
+                data:
+                  message: "El amor de tu vida necesita besos."
                 target:
                   device_id:
                     - 54e59c960e82f66b7a554608a8e30f28
