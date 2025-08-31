@@ -22,26 +22,30 @@ automation:
               - condition: state
                 entity_id: switch.luz_aseo
                 state: "off"
-              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
-              - condition: numeric_state
-                entity_id: sensor.tapa_inhodoro_aseo_z
-                below: 100
-              - condition: state
-                entity_id: switch.luz_banera
-                state: "off"
-              - condition: state
-                entity_id: switch.luz_aseo
-                state: "off"
-              - condition: state
-                entity_id: input_boolean.home_announcements_active
-                state: "on"
             sequence:
-              - service: notify.send_message
+              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
+              - condition: and
+                conditions:
+                  - condition: numeric_state
+                    entity_id: sensor.tapa_inhodoro_aseo_z
+                    below: 100
+                  - condition: state
+                    entity_id: switch.luz_banera
+                    state: "off"
+                  - condition: state
+                    entity_id: switch.luz_aseo
+                    state: "off"
+                  - condition: state
+                    entity_id: input_boolean.home_announcements_active
+                    state: "on"
+              - service: notify.alexa_media
                 data:
+                  target:
+                    - media_player.echo_salon        # 👈 cambia por tus Echos
                   message: "Recuerda bajar la tapa del inodoro del aseo."
-                target:
-                  device_id:
-                    - 54e59c960e82f66b7a554608a8e30f28
+                  data:
+                    type: announce
+                    method: speak
 
           # Baño
           - conditions:
@@ -51,23 +55,27 @@ automation:
               - condition: state
                 entity_id: switch.luz_ducha_dormitorio
                 state: "off"
-              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
-              - condition: numeric_state
-                entity_id: sensor.tapa_inhodoro_bano_z
-                below: 100
-              - condition: state
-                entity_id: switch.luz_bano_dormitorio
-                state: "off"
-              - condition: state
-                entity_id: switch.luz_ducha_dormitorio
-                state: "off"
-              - condition: state
-                entity_id: input_boolean.home_announcements_active
-                state: "on"
             sequence:
-              - service: notify.send_message
+              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
+              - condition: and
+                conditions:
+                  - condition: numeric_state
+                    entity_id: sensor.tapa_inhodoro_bano_z
+                    below: 100
+                  - condition: state
+                    entity_id: switch.luz_bano_dormitorio
+                    state: "off"
+                  - condition: state
+                    entity_id: switch.luz_ducha_dormitorio
+                    state: "off"
+                  - condition: state
+                    entity_id: input_boolean.home_announcements_active
+                    state: "on"
+              - service: notify.alexa_media
                 data:
+                  target:
+                    - media_player.echo_salon        # 👈 cambia por tus Echos
                   message: "Recuerda bajar la tapa del inodoro del baño."
-                target:
-                  device_id:
-                    - 54e59c960e82f66b7a554608a8e30f28
+                  data:
+                    type: announce
+                    method: speak
