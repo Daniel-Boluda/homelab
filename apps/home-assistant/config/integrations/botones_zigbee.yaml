@@ -11,13 +11,29 @@ automation:
         subtype: single
         id: boton_encimera_single
 
-      # Aquí podrías añadir otros botones o acciones:
-      # - platform: device
-      #   domain: mqtt
-      #   device_id: XXXXX
-      #   type: action
-      #   subtype: single
-      #   id: otro_boton_single
+      # Botón mesilla Lucía - single
+      - platform: device
+        domain: mqtt
+        device_id: a0bbf46c3e2b62d7e82e5a62cae70ef7
+        type: action
+        subtype: single
+        id: boton_mesilla_lucia_single
+
+      # Botón entrada - single
+      - platform: device
+        domain: mqtt
+        device_id: 3e059844353a5d3504fe2f39e71d82a2
+        type: action
+        subtype: single
+        id: boton_entrada_single
+
+      # Botón entrada - double
+      - platform: device
+        domain: mqtt
+        device_id: 3e059844353a5d3504fe2f39e71d82a2
+        type: action
+        subtype: double
+        id: boton_entrada_double
 
     action:
       - choose:
@@ -30,11 +46,32 @@ automation:
                 target:
                   entity_id: switch.luz_encimera
 
-          # Ejemplo para otro botón en el futuro
-          # - conditions:
-          #     - condition: template
-          #       value_template: "{{ trigger.id == 'otro_boton_single' }}"
-          #   sequence:
-          #     - service: light.toggle
-          #       target:
-          #         entity_id: light.otra_luz
+          # Botón mesilla Lucía → aviso
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'boton_mesilla_lucia_single' }}"
+            sequence:
+              - service: notify.send_message
+                data:
+                  message: "Lucia necesita abrazos."
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
+
+          # Botón entrada - single → encender pantalla
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'boton_entrada_single' }}"
+            sequence:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.marco_entrada_pantalla
+
+          # Botón entrada - double → apagar pantalla
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'boton_entrada_double' }}"
+            sequence:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.marco_entrada_pantalla
