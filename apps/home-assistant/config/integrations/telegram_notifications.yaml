@@ -1,33 +1,187 @@
 automation:
-  - alias: Avisos Telegram - Puertas y sensores
-    description: Notifica por Telegram usando trigger ids (fácil de ampliar)
+  - alias: Avisos Telegram - Puertas y Ventanas
+    description: Notifica por Telegram cuando se abren o cierran puertas/ventanas
     mode: single
 
     trigger:
-      # Puerta de la entrada → abierta
-      - platform: device
-        domain: binary_sensor
-        device_id: 55e1840b1ddb22110d66ce618f2edee6
-        entity_id: 927238d9d2a9e69fc9b5265113ec29eb
-        type: opened
+      # Puerta entrada
+      - platform: state
+        entity_id: binary_sensor.puerta_entrada
+        from: "off"
+        to: "on"
         id: puerta_entrada_abierta
+      - platform: state
+        entity_id: binary_sensor.puerta_entrada
+        from: "on"
+        to: "off"
+        id: puerta_entrada_cerrada
 
-      # ← añade aquí más triggers con su `id` (p. ej. puerta_terraza_abierta, etc.)
+      # Puerta terraza
+      - platform: state
+        entity_id: binary_sensor.puerta_terraza_contact
+        from: "off"
+        to: "on"
+        id: puerta_terraza_abierta
+      - platform: state
+        entity_id: binary_sensor.puerta_terraza_contact
+        from: "on"
+        to: "off"
+        id: puerta_terraza_cerrada
+
+      # Puerta cocina
+      - platform: state
+        entity_id: binary_sensor.puerta_cocina_contact
+        from: "off"
+        to: "on"
+        id: puerta_cocina_abierta
+      - platform: state
+        entity_id: binary_sensor.puerta_cocina_contact
+        from: "on"
+        to: "off"
+        id: puerta_cocina_cerrada
+
+      # Ventana despacho
+      - platform: state
+        entity_id: binary_sensor.ventana_despacho_contact
+        from: "off"
+        to: "on"
+        id: ventana_despacho_abierta
+      - platform: state
+        entity_id: binary_sensor.ventana_despacho_contact
+        from: "on"
+        to: "off"
+        id: ventana_despacho_cerrada
+
+      # Ventana dormitorio
+      - platform: state
+        entity_id: binary_sensor.ventana_dormitorio_contact
+        from: "off"
+        to: "on"
+        id: ventana_dormitorio_abierta
+      - platform: state
+        entity_id: binary_sensor.ventana_dormitorio_contact
+        from: "on"
+        to: "off"
+        id: ventana_dormitorio_cerrada
+
+      # Ventana invitados
+      - platform: state
+        entity_id: binary_sensor.ventana_invitados_contact
+        from: "off"
+        to: "on"
+        id: ventana_invitados_abierta
+      - platform: state
+        entity_id: binary_sensor.ventana_invitados_contact
+        from: "on"
+        to: "off"
+        id: ventana_invitados_cerrada
 
     action:
       - choose:
-          # ------- Puerta de la entrada abierta -------
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'puerta_entrada_abierta' }}"
+          # Puerta entrada
+          - conditions: "{{ trigger.id == 'puerta_entrada_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
-                  # Usa tu entrada del bot (la de la captura)
                   config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
-                  # Si quieres enviar a un chat/grupo concreto:
-                  target:
-                    - -4214392892        # serverdabol-hass-all
-                  title: "Puerta abierta"
-                  message: "🚪 La puerta de la ENTRADA se ha ABIERTO a las {{ now().strftime('%H:%M:%S') }}."
-      # Puedes añadir más bloques choose con otros ids aquí
+                  target: [-4214392892]
+                  title: "Puerta entrada"
+                  message: "🚪 La PUERTA DE ENTRADA se ha ABIERTO a las {{ now().strftime('%H:%M:%S') }}."
+          - conditions: "{{ trigger.id == 'puerta_entrada_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Puerta entrada"
+                  message: "🚪 La PUERTA DE ENTRADA se ha CERRADO a las {{ now().strftime('%H:%M:%S') }}."
+
+          # Puerta terraza
+          - conditions: "{{ trigger.id == 'puerta_terraza_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Puerta terraza"
+                  message: "🚪 La PUERTA DE LA TERRAZA se ha ABIERTO."
+          - conditions: "{{ trigger.id == 'puerta_terraza_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Puerta terraza"
+                  message: "🚪 La PUERTA DE LA TERRAZA se ha CERRADO."
+
+          # Puerta cocina
+          - conditions: "{{ trigger.id == 'puerta_cocina_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Puerta cocina"
+                  message: "🚪 La PUERTA DE LA COCINA se ha ABIERTO."
+          - conditions: "{{ trigger.id == 'puerta_cocina_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Puerta cocina"
+                  message: "🚪 La PUERTA DE LA COCINA se ha CERRADO."
+
+          # Ventana despacho
+          - conditions: "{{ trigger.id == 'ventana_despacho_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana despacho"
+                  message: "🪟 La VENTANA DEL DESPACHO se ha ABIERTO."
+          - conditions: "{{ trigger.id == 'ventana_despacho_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana despacho"
+                  message: "🪟 La VENTANA DEL DESPACHO se ha CERRADO."
+
+          # Ventana dormitorio
+          - conditions: "{{ trigger.id == 'ventana_dormitorio_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana dormitorio"
+                  message: "🪟 La VENTANA DEL DORMITORIO se ha ABIERTO."
+          - conditions: "{{ trigger.id == 'ventana_dormitorio_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana dormitorio"
+                  message: "🪟 La VENTANA DEL DORMITORIO se ha CERRADO."
+
+          # Ventana invitados
+          - conditions: "{{ trigger.id == 'ventana_invitados_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana invitados"
+                  message: "🪟 La VENTANA DE INVITADOS se ha ABIERTO."
+          - conditions: "{{ trigger.id == 'ventana_invitados_cerrada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Ventana invitados"
+                  message: "🪟 La VENTANA DE INVITADOS se ha CERRADO."
