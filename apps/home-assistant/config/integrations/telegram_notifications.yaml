@@ -1,0 +1,33 @@
+automation:
+  - alias: Avisos Telegram - Puertas y sensores
+    description: Notifica por Telegram usando trigger ids (fácil de ampliar)
+    mode: single
+
+    trigger:
+      # Puerta de la entrada → abierta
+      - platform: device
+        domain: binary_sensor
+        device_id: 55e1840b1ddb22110d66ce618f2edee6
+        entity_id: 927238d9d2a9e69fc9b5265113ec29eb
+        type: opened
+        id: puerta_entrada_abierta
+
+      # ← añade aquí más triggers con su `id` (p. ej. puerta_terraza_abierta, etc.)
+
+    action:
+      - choose:
+          # ------- Puerta de la entrada abierta -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_entrada_abierta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  # Usa tu entrada del bot (la de la captura)
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  # Si quieres enviar a un chat/grupo concreto:
+                  target:
+                    - -4214392892        # serverdabol-hass-all
+                  title: "Puerta abierta"
+                  message: "🚪 La puerta de la ENTRADA se ha ABIERTO a las {{ now().strftime('%H:%M:%S') }}."
+      # Puedes añadir más bloques choose con otros ids aquí
