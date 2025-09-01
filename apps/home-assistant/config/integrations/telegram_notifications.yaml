@@ -1,10 +1,10 @@
 automation:
-  - alias: Avisos Telegram - Puertas y Ventanas
-    description: Notifica por Telegram cuando se abren o cierran puertas/ventanas
+  - alias: Avisos Telegram - Puertas, Ventanas y Fugas
+    description: Notifica por Telegram (con foto al abrir la puerta de entrada)
     mode: single
 
     trigger:
-      # Puerta entrada
+      # --- Puerta entrada ---
       - platform: state
         entity_id: binary_sensor.puerta_entrada
         from: "off"
@@ -16,7 +16,7 @@ automation:
         to: "off"
         id: puerta_entrada_cerrada
 
-      # Puerta terraza
+      # --- Puerta terraza ---
       - platform: state
         entity_id: binary_sensor.puerta_terraza_contact
         from: "off"
@@ -28,7 +28,7 @@ automation:
         to: "off"
         id: puerta_terraza_cerrada
 
-      # Puerta cocina
+      # --- Puerta cocina ---
       - platform: state
         entity_id: binary_sensor.puerta_cocina_contact
         from: "off"
@@ -40,7 +40,7 @@ automation:
         to: "off"
         id: puerta_cocina_cerrada
 
-      # Ventana despacho
+      # --- Ventana despacho ---
       - platform: state
         entity_id: binary_sensor.ventana_despacho_contact
         from: "off"
@@ -52,7 +52,7 @@ automation:
         to: "off"
         id: ventana_despacho_cerrada
 
-      # Ventana dormitorio
+      # --- Ventana dormitorio ---
       - platform: state
         entity_id: binary_sensor.ventana_dormitorio_contact
         from: "off"
@@ -64,7 +64,7 @@ automation:
         to: "off"
         id: ventana_dormitorio_cerrada
 
-      # Ventana invitados
+      # --- Ventana invitados ---
       - platform: state
         entity_id: binary_sensor.ventana_invitados_contact
         from: "off"
@@ -76,10 +76,36 @@ automation:
         to: "off"
         id: ventana_invitados_cerrada
 
+      # --- Fugas baño ---
+      - platform: state
+        entity_id: binary_sensor.fugas_bano_water_leak
+        from: "off"
+        to: "on"
+        id: fuga_bano_detectada
+      - platform: state
+        entity_id: binary_sensor.fugas_bano_water_leak
+        from: "on"
+        to: "off"
+        id: fuga_bano_resuelta
+
+      # --- Fugas aseo ---
+      - platform: state
+        entity_id: binary_sensor.fugas_aseo_water_leak
+        from: "off"
+        to: "on"
+        id: fuga_aseo_detectada
+      - platform: state
+        entity_id: binary_sensor.fugas_aseo_water_leak
+        from: "on"
+        to: "off"
+        id: fuga_aseo_resuelta
+
     action:
       - choose:
-          # Puerta entrada
-          - conditions: "{{ trigger.id == 'puerta_entrada_abierta' }}"
+          # ------- Puerta entrada abierta: mensaje + foto -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_entrada_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -87,7 +113,17 @@ automation:
                   target: [-4214392892]
                   title: "Puerta entrada"
                   message: "🚪 La PUERTA DE ENTRADA se ha ABIERTO a las {{ now().strftime('%H:%M:%S') }}."
-          - conditions: "{{ trigger.id == 'puerta_entrada_cerrada' }}"
+              - service: telegram_bot.send_photo
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  caption: "📷 Detección cámara descansillo"
+                  file: /api/image_proxy/image.camara_descansillo_person
+
+          # ------- Puerta entrada cerrada -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_entrada_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -96,8 +132,10 @@ automation:
                   title: "Puerta entrada"
                   message: "🚪 La PUERTA DE ENTRADA se ha CERRADO a las {{ now().strftime('%H:%M:%S') }}."
 
-          # Puerta terraza
-          - conditions: "{{ trigger.id == 'puerta_terraza_abierta' }}"
+          # ------- Puerta terraza -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_terraza_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -105,7 +143,9 @@ automation:
                   target: [-4214392892]
                   title: "Puerta terraza"
                   message: "🚪 La PUERTA DE LA TERRAZA se ha ABIERTO."
-          - conditions: "{{ trigger.id == 'puerta_terraza_cerrada' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_terraza_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -114,8 +154,10 @@ automation:
                   title: "Puerta terraza"
                   message: "🚪 La PUERTA DE LA TERRAZA se ha CERRADO."
 
-          # Puerta cocina
-          - conditions: "{{ trigger.id == 'puerta_cocina_abierta' }}"
+          # ------- Puerta cocina -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_cocina_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -123,7 +165,9 @@ automation:
                   target: [-4214392892]
                   title: "Puerta cocina"
                   message: "🚪 La PUERTA DE LA COCINA se ha ABIERTO."
-          - conditions: "{{ trigger.id == 'puerta_cocina_cerrada' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'puerta_cocina_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -132,8 +176,10 @@ automation:
                   title: "Puerta cocina"
                   message: "🚪 La PUERTA DE LA COCINA se ha CERRADO."
 
-          # Ventana despacho
-          - conditions: "{{ trigger.id == 'ventana_despacho_abierta' }}"
+          # ------- Ventana despacho -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_despacho_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -141,7 +187,9 @@ automation:
                   target: [-4214392892]
                   title: "Ventana despacho"
                   message: "🪟 La VENTANA DEL DESPACHO se ha ABIERTO."
-          - conditions: "{{ trigger.id == 'ventana_despacho_cerrada' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_despacho_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -150,8 +198,10 @@ automation:
                   title: "Ventana despacho"
                   message: "🪟 La VENTANA DEL DESPACHO se ha CERRADO."
 
-          # Ventana dormitorio
-          - conditions: "{{ trigger.id == 'ventana_dormitorio_abierta' }}"
+          # ------- Ventana dormitorio -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_dormitorio_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -159,7 +209,9 @@ automation:
                   target: [-4214392892]
                   title: "Ventana dormitorio"
                   message: "🪟 La VENTANA DEL DORMITORIO se ha ABIERTO."
-          - conditions: "{{ trigger.id == 'ventana_dormitorio_cerrada' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_dormitorio_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -168,8 +220,10 @@ automation:
                   title: "Ventana dormitorio"
                   message: "🪟 La VENTANA DEL DORMITORIO se ha CERRADO."
 
-          # Ventana invitados
-          - conditions: "{{ trigger.id == 'ventana_invitados_abierta' }}"
+          # ------- Ventana invitados -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_invitados_abierta' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -177,7 +231,9 @@ automation:
                   target: [-4214392892]
                   title: "Ventana invitados"
                   message: "🪟 La VENTANA DE INVITADOS se ha ABIERTO."
-          - conditions: "{{ trigger.id == 'ventana_invitados_cerrada' }}"
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_invitados_cerrada' }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -185,3 +241,47 @@ automation:
                   target: [-4214392892]
                   title: "Ventana invitados"
                   message: "🪟 La VENTANA DE INVITADOS se ha CERRADO."
+
+          # ------- Fuga baño -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'fuga_bano_detectada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "🚨 FUGA EN BAÑO"
+                  message: "💧 Se ha DETECTADO una FUGA DE AGUA en el BAÑO."
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'fuga_bano_resuelta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Fuga baño resuelta"
+                  message: "✅ La fuga en el BAÑO ya no se detecta."
+
+          # ------- Fuga aseo -------
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'fuga_aseo_detectada' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "🚨 FUGA EN ASEO"
+                  message: "💧 Se ha DETECTADO una FUGA DE AGUA en el ASEO."
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'fuga_aseo_resuelta' }}"
+            sequence:
+              - service: telegram_bot.send_message
+                data:
+                  config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+                  target: [-4214392892]
+                  title: "Fuga aseo resuelta"
+                  message: "✅ La fuga en el ASEO ya no se detecta."
