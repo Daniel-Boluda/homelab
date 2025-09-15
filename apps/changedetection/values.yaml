@@ -14,7 +14,7 @@ app-template:
             TZ: Europe/Madrid
             BASE_URL: https://changedetection.dbcloud.org
             # ==== activar Playwright/Chrome vía sockpuppet ====
-            PLAYWRIGHT_DRIVER_URL: ws://sockpuppet:3000
+            PLAYWRIGHT_DRIVER_URL: ws://changedetection-sockpuppet:3000
             USE_X_SETTINGS: "1"
             # Otros ejemplos útiles:
             # LOGGER_LEVEL: INFO
