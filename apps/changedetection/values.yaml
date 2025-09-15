@@ -80,13 +80,11 @@ app-template:
       ports:
         http:
           port: 5000
-          targetPort: http
     sockpuppet:
       controller: sockpuppet
       ports:
         ws:
           port: 3000
-          targetPort: ws
 
   ingress:
     external:
