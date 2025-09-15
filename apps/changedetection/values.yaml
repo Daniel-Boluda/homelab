@@ -9,7 +9,7 @@ app-template:
         main:
           image:
             repository: dgtlmoon/changedetection.io
-            tag: 0.50.12
+            tag: 0.50.13
           env:
             TZ: Europe/Madrid
             BASE_URL: https://changedetection.dbcloud.org
