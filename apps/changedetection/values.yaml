@@ -12,11 +12,10 @@ app-template:
             tag: 0.50.12
           env:
             TZ: Europe/Madrid
-            # Si vas a ponerlo detrás del Ingress bajo este FQDN, ayuda para links en notificaciones:
             BASE_URL: https://changedetection.dbcloud.org
-            # Descomenta estas dos líneas si vas a usar el navegador sockpuppet (JS)
-            # PLAYWRIGHT_DRIVER_URL: ws://sockpuppet:3000
-            # USE_X_SETTINGS: "1"
+            # ==== activar Playwright/Chrome vía sockpuppet ====
+            PLAYWRIGHT_DRIVER_URL: ws://sockpuppet:3000
+            USE_X_SETTINGS: "1"
             # Otros ejemplos útiles:
             # LOGGER_LEVEL: INFO
             # FETCH_WORKERS: "10"
@@ -39,12 +38,55 @@ app-template:
                 failureThreshold: 30
                 periodSeconds: 5
 
+    # ===== Controller del navegador sockpuppet (Playwright/Chrome) =====
+    sockpuppet:
+      type: deployment
+      replicas: 1
+      containers:
+        main:
+          image:
+            repository: dgtlmoon/sockpuppetbrowser
+            tag: latest
+          env:
+            SCREEN_WIDTH: "1920"
+            SCREEN_HEIGHT: "1024"
+            SCREEN_DEPTH: "16"
+            MAX_CONCURRENT_CHROME_PROCESSES: "10"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          ports:
+            - name: ws
+              containerPort: 3000
+          probes:
+            liveness:
+              enabled: true
+              spec:
+                tcpSocket:
+                  port: 3000
+            readiness:
+              enabled: true
+              spec:
+                tcpSocket:
+                  port: 3000
+  # ====================================================================
+
   service:
     changedetection:
       controller: changedetection
       ports:
         http:
           port: 5000
+          targetPort: http
+    sockpuppet:
+      controller: sockpuppet
+      ports:
+        ws:
+          port: 3000
+          targetPort: ws
 
   ingress:
     external:
