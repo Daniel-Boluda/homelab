@@ -210,7 +210,7 @@ app-template:
         zigbee2mqtt:
           image:
             repository: koenkk/zigbee2mqtt
-            tag: latest-dev
+            tag: 2.6.1
           env:
             - name: TZ
               value: Europe/Madrid
