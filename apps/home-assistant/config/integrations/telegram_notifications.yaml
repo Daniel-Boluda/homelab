@@ -106,9 +106,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_entrada_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -127,9 +126,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_entrada_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -142,9 +140,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_terraza_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -155,9 +152,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_terraza_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -170,9 +166,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_cocina_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -183,9 +178,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'puerta_cocina_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -198,9 +192,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_despacho_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -211,9 +204,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_despacho_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -226,9 +218,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_dormitorio_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -239,9 +230,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_dormitorio_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -254,9 +244,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_invitados_abierta' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
@@ -267,9 +256,8 @@ automation:
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'ventana_invitados_cerrada' }}"
-              - condition: numeric_state
-                entity_id: zone.home
-                below: 1
+              - condition: template
+                value_template: "{{ states('zone.home') | int(0) == 0 }}"
             sequence:
               - service: telegram_bot.send_message
                 data:
