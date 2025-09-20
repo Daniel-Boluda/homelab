@@ -1,6 +1,6 @@
 automation:
   - alias: Control persianas
-    description: Sube al 40% a las 13:00 y la abre a las 21:00, cierra dormitorio a las 23:00
+    description: Sube al 40% a las 13:00 y la abre a las 21:00, cierra dormitorio a las 23:00 (si ventana cerrada) y al cerrar ventana entre 23:00–07:00
     mode: single
     trigger:
       - platform: time
@@ -12,9 +12,17 @@ automation:
       - platform: time
         at: "23:30:00"
         id: "persianas_23h"
+
+      - platform: state
+        entity_id: binary_sensor.ventana_dormitorio_contact
+        from: "on"
+        to: "off"
+        id: "ventana_dormitorio_cerrada"
+
     condition: []
     action:
       - choose:
+          # --- 13:00 ---
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'persianas_13h' }}"
@@ -44,6 +52,7 @@ automation:
                         data:
                           position: 40
 
+          # --- 21:00 ---
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'persianas_21h' }}"
@@ -64,9 +73,28 @@ automation:
                 data:
                   position: 100
 
+          # --- 23:30 --- (solo si la ventana del dormitorio está CERRADA)
           - conditions:
               - condition: template
                 value_template: "{{ trigger.id == 'persianas_23h' }}"
+              - condition: state
+                entity_id: binary_sensor.ventana_dormitorio_contact
+                state: "off"
+            sequence:
+              - service: cover.set_cover_position
+                target:
+                  entity_id: cover.persiana_dormitorio
+                data:
+                  position: 0
+
+          # --- Al cerrar la ventana del dormitorio entre 23:00 y 07:00 ---
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.id == 'ventana_dormitorio_cerrada' }}"
+              - condition: time
+                # Este formato cruza medianoche: válido si la hora es >=23:00 o <07:00
+                after: "23:00:00"
+                before: "07:00:00"
             sequence:
               - service: cover.set_cover_position
                 target:
