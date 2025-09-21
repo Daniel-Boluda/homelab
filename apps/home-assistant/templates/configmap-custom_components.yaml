@@ -20,4 +20,4 @@ metadata:
   name: home-assistant-config-taskmanager
 data:
 # this removes subdirectories hiterarchy
-{{ (.Files.Glob "config/custom_components/task_manager/*").AsConfig | indent 2 }}
+{{ (.Files.Glob "config/custom_components/lockuser/*").AsConfig | indent 2 }}
