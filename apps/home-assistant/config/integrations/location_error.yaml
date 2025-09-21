@@ -8,14 +8,14 @@ automation:
       - choose:
           - conditions:
               - condition: template
-                value_template: "{{ trigger.to_state.state != 'granted' }}"
+                value_template: "{{ trigger.to_state.state | lower != 'granted' }}"
             sequence:
               - service: switch.turn_off
                 target:
                   entity_id: switch.lucia_useractive
           - conditions:
               - condition: template
-                value_template: "{{ trigger.to_state.state == 'granted' }}"
+                value_template: "{{ trigger.to_state.state | lower == 'granted' }}"
             sequence:
               - service: switch.turn_on
                 target:
