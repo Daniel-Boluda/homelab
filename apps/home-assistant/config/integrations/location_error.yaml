@@ -1,23 +1,23 @@
-alias: Gestion permisos localización
-description: >
-  Enciende o apaga el switch de usuario según el permiso de ubicación.
-trigger:
-  - platform: state
-    entity_id: sensor.iphone_de_lucia_location_permission
-action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.to_state.state != 'granted' }}"
-        sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: switch.lucia_useractive
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.to_state.state == 'granted' }}"
-        sequence:
-          - service: switch.turn_on
-            target:
-              entity_id: switch.lucia_useractive
-mode: single
+automation:
+  - alias: Gestion permisos localización
+    description: Enciende o apaga el switch de usuario según el permiso de ubicación.
+    trigger:
+      - platform: state
+        entity_id: sensor.iphone_de_lucia_location_permission
+    action:
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.to_state.state != 'granted' }}"
+            sequence:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.lucia_useractive
+          - conditions:
+              - condition: template
+                value_template: "{{ trigger.to_state.state == 'granted' }}"
+            sequence:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.lucia_useractive
+    mode: single
