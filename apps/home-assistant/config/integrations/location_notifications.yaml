@@ -58,21 +58,6 @@ automation:
 
     action:
       - choose:
-          # Daniel entra en Supera Rivas (notifica a Lucía si ella no está allí)
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'daniel_superarivas_enter' }}"
-              - condition: not
-                conditions:
-                  - condition: zone
-                    entity_id: person.pizarroservanlucia_gmail_com
-                    zone: zone.supera_rivas
-            sequence:
-              - service: notify.mobile_app_iphone_de_lucia
-                data:
-                  title: "Ubicación"
-                  message: "Daniel ha llegado a Supera Rivas."
-
           # Lucía entra en Supera Rivas (notifica a Daniel si él no está allí)
           - conditions:
               - condition: template
@@ -87,21 +72,6 @@ automation:
                 data:
                   title: "Ubicación"
                   message: "Lucía ha llegado a Supera Rivas."
-
-          # Daniel entra en casa (notifica a Lucía si ella no está en casa)
-          - conditions:
-              - condition: template
-                value_template: "{{ trigger.id == 'daniel_home_enter' }}"
-              - condition: not
-                conditions:
-                  - condition: zone
-                    entity_id: person.pizarroservanlucia_gmail_com
-                    zone: zone.home
-            sequence:
-              - service: notify.mobile_app_iphone_de_lucia
-                data:
-                  title: "Ubicación"
-                  message: "Daniel ha llegado a casa."
 
           # Lucía entra en casa (notifica a Daniel si él no está en casa)
           - conditions:
