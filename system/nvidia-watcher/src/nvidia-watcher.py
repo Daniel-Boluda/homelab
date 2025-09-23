@@ -63,23 +63,18 @@ _last_restart_by_pod = {}
 
 # =============== Helpers de entorno/nodo ===============
 def resolve_my_node_name(core: client.CoreV1Api) -> Optional[str]:
-    """
-    Intenta obtener el nombre del nodo:
-    1) MY_NODE_NAME (recomendado: Downward API spec.nodeName)
-    2) Leyendo el propio Pod con POD_NAME y POD_NAMESPACE
-    """
-    n = os.getenv("MY_NODE_NAME")
-    if n:
-        return n
+    try:
+        # el pod name se expone por defecto en HOSTNAME
+        pod_name = os.getenv("HOSTNAME")
+        # el namespace actual está montado en este archivo
+        with open("/var/run/secrets/kubernetes.io/serviceaccount/namespace") as f:
+            namespace = f.read().strip()
 
-    pod_name = os.getenv("POD_NAME")
-    pod_ns = os.getenv("POD_NAMESPACE")
-    if pod_name and pod_ns:
-        try:
-            p = core.read_namespaced_pod(pod_name, pod_ns)
-            return getattr(p.spec, "node_name", None)
-        except Exception as e:
-            log.warning(f"No se pudo resolver nodeName leyendo el Pod: {type(e).__name__}: {e}")
+        if pod_name and namespace:
+            p = core.read_namespaced_pod(name=pod_name, namespace=namespace)
+            return p.spec.node_name
+    except Exception as e:
+        log.warning(f"[detect] No se pudo determinar nodeName por API: {e}")
     return None
 
 # =============== Helpers v2 ===============
