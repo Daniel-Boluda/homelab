@@ -29,7 +29,6 @@ prometheus:
 notify: !include secrets/notify.yaml
 # auth_providers: !include secrets/auth_providers.yaml
 
-
 fan:
   - platform: custom_fan
 
@@ -47,18 +46,3 @@ switch:
     shutdown_user: "dabol"
     shutdown_command: "shutdown /s /t 0"
     name: "Dabol-meshy"
-
-  - platform: lockuser
-    devices:
-      musicassistant_useractive:
-        name: musicAssistant
-        unique_id: b9ea8af5e0fc4750a3fb3b595c9dbdd1
-      lucia_useractive:
-        name: lucia
-        unique_id: c2f42aa67734489abd9394113e52362f
-      alexa_useractive:
-        name: alexa
-        unique_id: fc6335b3e23c4123b4d51d36ee14cdfe
-      marco_fotos_entrada_useractive:
-        name: marco_fotos_entrada
-        unique_id: 42f6fca04c374a72b41521d9e83f79cc
