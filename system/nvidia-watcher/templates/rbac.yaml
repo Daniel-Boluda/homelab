@@ -4,7 +4,6 @@ metadata:
   name: nvidia-watcher
   namespace: nvidia-watcher
 ---
-
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -14,10 +13,15 @@ rules:
     resources: ["pods"]
     verbs: ["list", "watch", "get", "delete"]
   - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create", "get"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
 ---
-
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
