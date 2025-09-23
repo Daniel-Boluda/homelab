@@ -5,11 +5,14 @@ app-template:
         nvidia-watcher:
           image:
             repository: bolferdocker/nvidia-watcher
-            tag: 0.0.4
+            tag: 0.0.5
           env:
             LABEL_SELECTOR: runtime-class=nvidia
             POD_STATUS_REASON: UnexpectedAdmissionError
             POD_STATUS_PHASE: Failed
+            ENABLE_ALLOCATABLE: true
+            ENABLE_SMOKE: True
+
 
           resources:
             requests:

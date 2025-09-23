@@ -3,7 +3,6 @@ apiVersion: v1
 metadata:
   name: nvidia-watcher
   namespace: nvidia-watcher
-
 ---
 
 kind: ClusterRole
@@ -14,6 +13,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["list", "watch", "get", "delete"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
 ---
 
 kind: ClusterRoleBinding
@@ -28,4 +30,3 @@ subjects:
   - kind: ServiceAccount
     name: nvidia-watcher
     namespace: nvidia-watcher
-
