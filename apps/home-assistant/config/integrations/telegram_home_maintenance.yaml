@@ -16,12 +16,12 @@ automation:
         - binary_sensor.limpiar_cristalera_terraza
 
       due_tasks: >-
-        {% set ns = namespace(list=[]) -%}
-        {% for s in sensors -%}
-          {% if states(s) == 'on' -%}
-            {% set ns.list = ns.list + [s] -%}
-          {% endif -%}
-        {% endfor -%}
+        {% set ns = namespace(list=[]) %}
+        {% for s in sensors %}
+          {% if states(s) == 'on' %}
+            {% set ns.list = ns.list + [s] %}
+          {% endif %}
+        {% endfor %}
         {{ ns.list }}
 
     condition:
@@ -36,8 +36,10 @@ automation:
           parse_mode: markdown
           title: "🧰 Mantenimiento del hogar"
           message: >-
-            *Tienes {{ due_tasks | length }} tareas pendientes*
+            Tienes {{ due_tasks | length }} tareas pendientes
+
             {%- for e in due_tasks %}
-            • {{ state_attr(e, 'friendly_name') }} desde el {{ (as_datetime(state_attr(e, 'next_due')) | as_local).strftime('%-d/%-m/%Y') if state_attr(e, 'next_due') else 'sin fecha' }}
-            {%- endfor %}
-            👉 *Ver/gestionar:* https://hass.dbcloud.org/home-maintenance
+            • {{ state_attr(e, 'friendly_name') }} desde el {{ (as_datetime(state_attr(e, 'next_due')) | as_local).strftime('%-d/%m/%Y') if state_attr(e, 'next_due') else 'sin fecha' }}
+
+            {%- endfor -%}
+            👉 Ver: https://hass.dbcloud.org/home-maintenance
