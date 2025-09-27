@@ -1,0 +1,43 @@
+automation:
+  - alias: Aviso diario – Tareas Home Maintenance (ON)
+    description: A las 12:00 recuerda por Telegram las tareas cuyo binary_sensor está en on.
+    mode: single
+
+    trigger:
+      - platform: time
+        at: "12:30:00"
+
+    variables:
+      sensors:
+        - binary_sensor.cambiar_sabanas
+        - binary_sensor.regar_plantas_lucia
+        - binary_sensor.cortar_unas_elsa
+        - binary_sensor.cambiar_bolsa_arenero
+        - binary_sensor.limpiar_cristalera_terraza
+
+      due_tasks: >-
+        {% set ns = namespace(list=[]) -%}
+        {% for s in sensors -%}
+          {% if states(s) == 'on' -%}
+            {% set ns.list = ns.list + [s] -%}
+          {% endif -%}
+        {% endfor -%}
+        {{ ns.list }}
+
+    condition:
+      - condition: template
+        value_template: "{{ due_tasks | length > 0 }}"
+
+    action:
+      - service: telegram_bot.send_message
+        data:
+          config_entry_id: 01K0ERS1J1REVPTMSB2J7S90QS
+          target: [-4214392892]
+          parse_mode: markdown
+          title: "🧰 Mantenimiento del hogar"
+          message: >-
+            *Tienes {{ due_tasks | length }} tareas pendientes*
+            {%- for e in due_tasks %}
+            • {{ state_attr(e, 'friendly_name') }} desde el {{ (as_datetime(state_attr(e, 'next_due')) | as_local).strftime('%-d/%-m/%Y') if state_attr(e, 'next_due') else 'sin fecha' }}
+            {%- endfor %}
+            👉 *Ver/gestionar:* https://hass.dbcloud.org/home-maintenance
