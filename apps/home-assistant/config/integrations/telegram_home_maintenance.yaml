@@ -9,11 +9,13 @@ automation:
 
     variables:
       sensors:
-        - binary_sensor.cambiar_sabanas
         - binary_sensor.regar_plantas_lucia
         - binary_sensor.cortar_unas_elsa
+        - binary_sensor.limpiar_bebedero_elsa
+        - binary_sensor.rellenar_comedero_elsa
         - binary_sensor.cambiar_bolsa_arenero
         - binary_sensor.limpiar_cristalera_terraza
+        - binary_sensor.cambiar_sabanas
 
       due_tasks: >-
         {% set ns = namespace(list=[]) %}

@@ -38,14 +38,12 @@ automation:
                   - condition: state
                     entity_id: input_boolean.home_announcements_active
                     state: "on"
-              - service: notify.alexa_media
+              - service: notify.send_message
                 data:
-                  target:
-                    - media_player.echo_salon        # 👈 cambia por tus Echos
                   message: "Recuerda bajar la tapa del inodoro del aseo."
-                  data:
-                    type: announce
-                    method: speak
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
 
           # Baño
           - conditions:
@@ -71,11 +69,9 @@ automation:
                   - condition: state
                     entity_id: input_boolean.home_announcements_active
                     state: "on"
-              - service: notify.alexa_media
+              - service: notify.send_message
                 data:
-                  target:
-                    - media_player.echo_salon        # 👈 cambia por tus Echos
                   message: "Recuerda bajar la tapa del inodoro del baño."
-                  data:
-                    type: announce
-                    method: speak
+                target:
+                  device_id:
+                    - 54e59c960e82f66b7a554608a8e30f28
