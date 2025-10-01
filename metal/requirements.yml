@@ -1,11 +1,11 @@
 ---
 roles:
   - src: geerlingguy.ntp
-    version: 2.7.0
+    version: 3.0.0
 
 collections:
   - name: community.general
     version: 11.3.0
 
   - name: community.crypto
-    version: 3.0.3
+    version: 3.0.4
