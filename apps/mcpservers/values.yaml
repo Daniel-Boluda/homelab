@@ -16,7 +16,7 @@ app-template:
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com"
           envFrom:
           - secretRef:
-              name: mcpserver-secrets
+              name: mcpservers-secrets
 
           resources:
             requests:
