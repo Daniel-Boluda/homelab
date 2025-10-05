@@ -75,7 +75,7 @@ app-template:
         # NGINX responde directamente con el JSON (no contacta al pod)
         nginx.ingress.kubernetes.io/configuration-snippet: |
           add_header Content-Type application/json;
-          return 200 '{"authorization_servers":["https://auth.dbcloud.org"],"resource":"https://mcpservers.dbcloud.org"}';
+          return 200 '{"authorization_servers":["https://keycloak.dbcloud.org/realms/master"],"resource":"https://mcpservers.dbcloud.org"}';
         nginx.ingress.kubernetes.io/proxy-buffering: "off"
       hosts:
       - host: *host
