@@ -9,10 +9,10 @@ app-template:
         main:
           image:
             repository: bolferdocker/plant-risk-mcp
-            tag: 0.0.3
+            tag: 0.0.4
           env:
             TZ: Europe/Madrid
-            GOOGLE_REDIRECT_URI: https://mcpservers.dbcloud.org/auth/callback
+            BASE_URL: https://mcpservers.dbcloud.org
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com"
           envFrom:
           - secretRef:
