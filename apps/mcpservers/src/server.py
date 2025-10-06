@@ -360,18 +360,32 @@ def _extract_email_from_context(fctx) -> Optional[str]:
     - fctx.token.claims["email"]
     """
     try:
+        logger.debug(f"[AUTH] fctx type={type(fctx)}")
         user = getattr(fctx, "user", None)
-        if user:
-            # Puede ser objeto con .email o dict
-            e1 = getattr(user, "email", None)
-            if e1:
-                return str(e1).lower()
-            if isinstance(user, dict) and user.get("email"):
-                return str(user["email"]).lower()
         token = getattr(fctx, "token", None)
         claims = getattr(token, "claims", None) if token else None
+
+        logger.debug(f"[AUTH] user(raw)={user!r}")
+        logger.debug(f"[AUTH] token(raw)={token!r}")
+        logger.debug(f"[AUTH] claims(raw)={claims!r}")
+
+        if user:
+            e1 = getattr(user, "email", None)
+            if e1:
+                email = str(e1).lower()
+                logger.info(f"[AUTH] email por user.email -> {email}")
+                return email
+            if isinstance(user, dict) and user.get("email"):
+                email = str(user["email"]).lower()
+                logger.info(f"[AUTH] email por user['email'] -> {email}")
+                return email
+
         if isinstance(claims, dict) and claims.get("email"):
-            return str(claims["email"]).lower()
+            email = str(claims["email"]).lower()
+            logger.info(f"[AUTH] email por token.claims['email'] -> {email}")
+            return email
+
+        logger.warning("[AUTH] No se pudo extraer email del contexto")
     except Exception as ex:
         logger.warning(f"[AUTH] error extrayendo email del contexto: {ex}")
     return None
@@ -430,8 +444,8 @@ class EmailWhitelistMiddleware(Middleware):
 # Server (tools)
 # -----------------------------------------------------------------------------
 def create_server() -> FastMCP:
-    #mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
-    mcp = FastMCP(name=MCP_NAME, instructions=SERVER_INSTRUCTIONS)
+    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
+    #mcp = FastMCP(name=MCP_NAME, instructions=SERVER_INSTRUCTIONS)
 
     async def root_ok(request):
         return JSONResponse({"status": "ok", "server": MCP_NAME, "time": _now_iso()})
@@ -444,6 +458,11 @@ def create_server() -> FastMCP:
     # Añadimos middleware
     # mcp.add_middleware(EmailWhitelistMiddleware())
 
+    @mcp.on_connect
+    async def on_connect(fctx):
+        email = _extract_email_from_context(fctx)
+        logger.info(f"[AUTH] Nueva conexión SSE — email extraído: {email}, permitido={email in ALLOWED_EMAILS if email else False}")
+    
     @mcp.tool()
     def health() -> dict:
         return {"status": "ok", "time": _now_iso()}
