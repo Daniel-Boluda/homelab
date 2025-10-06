@@ -457,14 +457,6 @@ def create_server() -> FastMCP:
         
     # Añadimos middleware
     # mcp.add_middleware(EmailWhitelistMiddleware())
-
-    @mcp.on_event("connect")
-    async def _on_connect(ctx):
-        email = _extract_email_from_context(ctx)
-        allowed = bool(email and email in ALLOWED_EMAILS)
-        logger.info(f"[AUTH] email extraído: {email}, permitido={allowed}")
-        if not allowed:
-            raise PermissionError("email no permitido")
         
     @mcp.tool()
     def health() -> dict:
