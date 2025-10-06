@@ -430,7 +430,8 @@ class EmailWhitelistMiddleware(Middleware):
 # Server (tools)
 # -----------------------------------------------------------------------------
 def create_server() -> FastMCP:
-    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
+    #mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
+    mcp = FastMCP(name=MCP_NAME, instructions=SERVER_INSTRUCTIONS)
 
     async def root_ok(request):
         return JSONResponse({"status": "ok", "server": MCP_NAME, "time": _now_iso()})
