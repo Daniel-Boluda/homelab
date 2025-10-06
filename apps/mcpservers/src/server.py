@@ -43,8 +43,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Callable
 
+from fastapi.responses import JSONResponse
 from fastmcp import FastMCP
-from fastmcp.server.routes import Route
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth.providers.google import GoogleProvider
@@ -433,9 +433,13 @@ def create_server() -> FastMCP:
     mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
 
     async def root_ok(request):
-        return {"status": "ok", "server": MCP_NAME, "time": _now_iso()}
-    mcp.add_route(Route("/", root_ok, methods=["GET"]))
+        return JSONResponse({"status": "ok", "server": MCP_NAME, "time": _now_iso()})
 
+    try:
+        mcp.app.add_api_route("/", root_ok, methods=["GET"])
+    except Exception as e:
+        logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
+        
     # Añadimos middleware
     mcp.add_middleware(EmailWhitelistMiddleware())
 
