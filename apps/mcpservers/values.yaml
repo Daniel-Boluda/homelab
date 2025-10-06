@@ -8,10 +8,17 @@ app-template:
       containers:
         main:
           image:
-            repository: bolferdocker/plant-risk-mcp
-            tag: 0.0.4
+            repository: bolferdocker/fastmcp-base
+            tag: 0.0.0
           env:
             TZ: Europe/Madrid
+            PYTHONDONTWRITEBYTECODE: 1 
+            PYTHONUNBUFFERED: 1 
+            PIP_NO_CACHE_DIR: 1
+            FASTMCP_LOGLEVEL: DEBUG
+            MCP_NAME: mcp-server
+            MCP_HOST: 0.0.0.0
+            MCP_PORT: 18000
             BASE_URL: https://mcpservers.dbcloud.org
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com"
           envFrom:
@@ -75,3 +82,23 @@ app-template:
       #runAsGroup: 1000
       #fsGroup: 1000
       fsGroupChangePolicy: "OnRootMismatch"
+
+  persistence:
+    app-config:
+      enabled: true
+      type: configMap
+      name: server-mcp-script
+      # Asegura redeploy cuando cambie el ConfigMap
+      keepSource: true
+      globalMounts:
+        - path: /app/server.py
+          subPath: server_script.py
+          readOnly: true
+        - path: /app/mcp.json
+          subPath: server_mcp.json
+          readOnly: true
+    data:
+      enabled: true
+      globalMounts:
+        - path: /app/data
+      existingClaim: ata-mcpservers

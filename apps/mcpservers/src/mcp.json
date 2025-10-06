@@ -1,0 +1,325 @@
+{
+  "name": "plant-risk-mcp",
+  "version": "2.0.0",
+  "description": "MCP para datos de riesgo de plantas (formatos estrictos) con salidas compactas y paginación.",
+  "instructions": "Usa 'detail=\"summary\"' (por defecto) o 'names' para respuestas pequeñas. Paginación con 'page_size' y 'cursor'. Pide 'full' solo si es imprescindible.",
+  "servers": [
+    { "type": "sse", "url": "http://localhost:18000/sse" }
+  ],
+  "resources": [
+    { "id": "plants", "path": "data/plants.json", "mime_type": "application/json", "description": "Objeto con 'plants'." },
+    { "id": "assets_full_any", "path": "data/assets_full_*.json", "mime_type": "application/json", "description": "Objeto con 'assets' por planta (incluye components/alerts en disco; el servidor proyecta/simplifica)." }
+  ],
+  "tools": [
+    {
+      "name": "health",
+      "description": "Comprobación simple de estado.",
+      "input_schema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "output_schema": { "type": "object" }
+    },
+
+    {
+      "name": "list_plants",
+      "description": "¿Qué plantas hay?",
+      "input_schema": { "type": "object", "properties": {}, "additionalProperties": false },
+      "output_schema": { "type": "object", "properties": { "plants": { "type": "array" } }, "required": ["plants"] }
+    },
+
+    {
+      "name": "list_machines_for_plant",
+      "description": "¿Qué máquinas hay en la planta x? (prioriza plant_name). Usa detail='summary' o 'names' y pagina por defecto.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plant_name": { "type": ["string", "null"] },
+          "plant_id": { "type": ["string", "null"] },
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "plant": { "type": "object" },
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["plant", "detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "machines_with_open_alerts_in_plant",
+      "description": "¿Qué máquinas tienen alertas abiertas en la planta x? (salida compacta por defecto).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plant_name": { "type": ["string", "null"] },
+          "plant_id": { "type": ["string", "null"] },
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "plant": { "type": "object" },
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["plant", "detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "machines_with_high_risk_in_plant",
+      "description": "¿Qué máquinas tienen riesgo alto en la planta x? (salida compacta por defecto).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plant_name": { "type": ["string", "null"] },
+          "plant_id": { "type": ["string", "null"] },
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "plant": { "type": "object" },
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["plant", "detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "list_machines",
+      "description": "¿Qué máquinas hay? (todas las plantas; por defecto summary + paginado).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "machines_with_open_alerts",
+      "description": "¿Qué máquinas tienen alertas abiertas? (global, compacto y paginado).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "machines_with_high_risk",
+      "description": "¿Qué máquinas tienen riesgo alto? (global, compacto y paginado).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": ["string", "null"], "enum": ["names", "summary", "full"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "detail": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "machines": { "type": "array" }
+        },
+        "required": ["detail", "count", "machines"]
+      }
+    },
+
+    {
+      "name": "list_alerts_in_plant",
+      "description": "Lista alertas en una planta. Por defecto state='Open', sin features (include_features=false), paginado.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plant_name": { "type": ["string", "null"] },
+          "plant_id": { "type": ["string", "null"] },
+          "state": { "type": ["string", "null"], "enum": ["Open", "Closed", "Any"] },
+          "include_features": { "type": ["boolean", "null"] },
+          "max_features": { "type": ["integer", "null"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "plant": { "type": "object" },
+          "state": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "alerts": { "type": "array" }
+        },
+        "required": ["plant", "state", "count", "alerts"]
+      }
+    },
+
+    {
+      "name": "list_alerts",
+      "description": "Lista alertas global. Por defecto state='Open', sin features, paginado.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "state": { "type": ["string", "null"], "enum": ["Open", "Closed", "Any"] },
+          "include_features": { "type": ["boolean", "null"] },
+          "max_features": { "type": ["integer", "null"] },
+          "page_size": { "type": ["integer", "null"] },
+          "cursor": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string" },
+          "count": { "type": "integer" },
+          "next_cursor": { "type": ["string", "null"] },
+          "alerts": { "type": "array" }
+        },
+        "required": ["state", "count", "alerts"]
+      }
+    },
+
+    {
+      "name": "get_alert_features_in_plant",
+      "description": "Features de una alerta concreta dentro de una planta. Recorta con 'max_features'.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plant_name": { "type": ["string", "null"] },
+          "plant_id": { "type": ["string", "null"] },
+          "alert_id": { "type": ["string", "null"] },
+          "alert_numeric_id": { "type": ["string", "null"] },
+          "machine_id": { "type": ["string", "null"] },
+          "machine_name": { "type": ["string", "null"] },
+          "max_features": { "type": ["integer", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "context": { "type": ["object", "null"] },
+          "features": { "type": ["array", "null"] },
+          "count": { "type": ["integer", "null"] },
+          "error": { "type": ["string", "null"] }
+        },
+        "required": []
+      }
+    },
+
+    {
+      "name": "get_alert_features",
+      "description": "Features de una alerta concreta (búsqueda global). Recorta con 'max_features'.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "alert_id": { "type": ["string", "null"] },
+          "alert_numeric_id": { "type": ["string", "null"] },
+          "max_features": { "type": ["integer", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "context": { "type": ["object", "null"] },
+          "features": { "type": ["array", "null"] },
+          "count": { "type": ["integer", "null"] },
+          "error": { "type": ["string", "null"] }
+        },
+        "required": []
+      }
+    },
+
+    {
+      "name": "get_alert_features_for_machine",
+      "description": "Features de una alerta de una máquina (global por nombre o id). 'state' = Open|Closed|Any; 'pick' = latest|highest_risk; recorta con 'max_features'.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "machine_name": { "type": ["string", "null"] },
+          "machine_id": { "type": ["string", "null"] },
+          "alert_id": { "type": ["string", "null"] },
+          "alert_numeric_id": { "type": ["string", "null"] },
+          "state": { "type": ["string", "null"], "enum": ["Open", "Closed", "Any"] },
+          "pick": { "type": ["string", "null"], "enum": ["latest", "highest_risk"] },
+          "max_features": { "type": ["integer", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "context": { "type": ["object", "null"] },
+          "features": { "type": ["array", "null"] },
+          "count": { "type": ["integer", "null"] },
+          "error": { "type": ["string", "null"] }
+        },
+        "required": []
+      }
+    }
+  ],
+  "env": {
+    "DATA_DIR": "./data",
+    "MCP_NAME": "plant-risk-mcp-compact",
+    "MCP_HOST": "0.0.0.0",
+    "MCP_PORT": "18000",
+    "DEFAULT_PAGE_SIZE": "50",
+    "DEFAULT_MAX_FEATURES": "3",
+    "FASTMCP_LOGLEVEL": "INFO"
+  }
+}
