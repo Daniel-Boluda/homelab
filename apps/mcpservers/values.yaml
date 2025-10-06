@@ -99,4 +99,4 @@ app-template:
       enabled: true
       globalMounts:
         - path: /app/data
-      existingClaim: ata-mcpservers
+      existingClaim: data-mcpservers
