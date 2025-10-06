@@ -88,8 +88,6 @@ app-template:
       enabled: true
       type: configMap
       name: server-mcp-script
-      # Asegura redeploy cuando cambie el ConfigMap
-      keepSource: true
       globalMounts:
         - path: /app/server.py
           subPath: server_script.py
