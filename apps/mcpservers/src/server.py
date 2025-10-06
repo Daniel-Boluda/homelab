@@ -44,6 +44,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Callable
 
 from fastmcp import FastMCP
+from fastmcp.server.routes import Route
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth.providers.google import GoogleProvider
@@ -431,13 +432,9 @@ class EmailWhitelistMiddleware(Middleware):
 def create_server() -> FastMCP:
     mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
 
-    # Montamos una raíz "/" para evitar 404 ruidosos
-    try:
-        @mcp.app.get("/")
-        def root_ok():
-            return {"status": "ok", "server": MCP_NAME, "time": _now_iso()}
-    except Exception as e:
-        logger.debug(f"No se pudo registrar '/' (no crítico): {e}")
+    async def root_ok(request):
+        return {"status": "ok", "server": MCP_NAME, "time": _now_iso()}
+    mcp.add_route(Route("/", root_ok, methods=["GET"]))
 
     # Añadimos middleware
     mcp.add_middleware(EmailWhitelistMiddleware())
