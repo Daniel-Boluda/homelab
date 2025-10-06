@@ -56,11 +56,11 @@ logging.basicConfig(level=getattr(logging, LOGLEVEL, logging.INFO))
 logger = logging.getLogger("plant-risk-mcp")
 
 # -----------------------------------------------------------------------------
-# Config general
+# Config
 # -----------------------------------------------------------------------------
 ROOT = Path(__file__).parent
 DATA_DIR = Path(os.getenv("DATA_DIR", ROOT / "data"))
-MCP_NAME = os.getenv("MCP_NAME", "plant-risk-mcp-protected")
+MCP_NAME = os.getenv("MCP_NAME", "mcp-server")
 MCP_HOST = os.getenv("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.getenv("MCP_PORT", "18000"))
 
@@ -69,7 +69,7 @@ DEFAULT_MAX_FEATURES = int(os.getenv("DEFAULT_MAX_FEATURES", "3"))
 
 SERVER_INSTRUCTIONS = """
 This MCP server serves plant risk data from local JSON files under ./data.
-
+Auth: Google OAuth. Access restricted by email whitelist (ALLOWED_EMAILS).
 To keep responses small:
 - Default detail is 'summary'; use 'names' for id+name only; use 'full' sparingly.
 - All list tools are paginated with 'page_size' and 'cursor'.
@@ -77,7 +77,7 @@ To keep responses small:
 """
 
 # -----------------------------------------------------------------------------
-# Autenticación OAuth (Google ejemplo)
+# OAuth Google
 # -----------------------------------------------------------------------------
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -96,49 +96,19 @@ google_auth = GoogleProvider(
     ],
 )
 
-# -----------------------------------------------------------------------------  
-# Whitelist de emails desde variable de entorno
 # -----------------------------------------------------------------------------
-ALLOWED_EMAILS_ENV = os.getenv("ALLOWED_EMAILS", "")
+# Whitelist por emails
+# -----------------------------------------------------------------------------
 ALLOWED_EMAILS = {
-    e.strip().lower() for e in ALLOWED_EMAILS_ENV.split(",") if e.strip()
+    e.strip().lower() for e in os.getenv("ALLOWED_EMAILS", "").split(",") if e.strip()
 }
 if not ALLOWED_EMAILS:
-    raise RuntimeError("Variable ALLOWED_EMAILS no contiene ningún email válido")
+    raise RuntimeError("ALLOWED_EMAILS vacío. Define emails coma-separados.")
 
 logger.info(f"Emails permitidos: {ALLOWED_EMAILS}")
 
-# -----------------------------------------------------------------------------  
-# Middleware para verificar acceso por email
 # -----------------------------------------------------------------------------
-class EmailWhitelistMiddleware(Middleware):
-    async def on_call_tool(self, context: MiddlewareContext, call_next):
-        fctx = context.fastmcp_context
-        if fctx is None or fctx.token is None:
-            raise ToolError("Not authenticated")
-        claims = getattr(fctx.token, "claims", None)
-        if not claims:
-            raise ToolError("Not authenticated")
-        email = claims.get("email")
-        if not email:
-            raise ToolError("User without email claim")
-        email_l = email.lower()
-        if email_l not in ALLOWED_EMAILS:
-            raise ToolError("User not allowed")
-        return await call_next(context)
-
-    async def on_list_tools(self, context: MiddlewareContext, call_next):
-        fctx = context.fastmcp_context
-        if fctx is None or fctx.token is None:
-            return []
-        claims = getattr(fctx.token, "claims", None)
-        email = claims.get("email") if claims else None
-        if not email or email.lower() not in ALLOWED_EMAILS:
-            return []
-        return await call_next(context)
-
-# -----------------------------------------------------------------------------  
-# Helpers comunes (como ya tenías)
+# Helpers (strict I/O)
 # -----------------------------------------------------------------------------
 def _read_json(path: Path):
     with path.open("r", encoding="utf-8") as f:
@@ -379,17 +349,174 @@ def _find_machine_global(machine_id: Optional[str], machine_name: Optional[str])
     return m, plant_obj
 
 # -----------------------------------------------------------------------------
-# Creación del servidor con protección
+# Middleware con logs detallados
+# -----------------------------------------------------------------------------
+def _extract_email_from_context(fctx) -> Optional[str]:
+    """
+    Intenta sacar el email del contexto de FastMCP de forma robusta:
+    - fctx.user.email
+    - fctx.user.get("email")
+    - fctx.token.claims["email"]
+    """
+    try:
+        user = getattr(fctx, "user", None)
+        if user:
+            # Puede ser objeto con .email o dict
+            e1 = getattr(user, "email", None)
+            if e1:
+                return str(e1).lower()
+            if isinstance(user, dict) and user.get("email"):
+                return str(user["email"]).lower()
+        token = getattr(fctx, "token", None)
+        claims = getattr(token, "claims", None) if token else None
+        if isinstance(claims, dict) and claims.get("email"):
+            return str(claims["email"]).lower()
+    except Exception as ex:
+        logger.warning(f"[AUTH] error extrayendo email del contexto: {ex}")
+    return None
+
+class EmailWhitelistMiddleware(Middleware):
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+        fctx = context.fastmcp_context
+        logger.debug(f"[MW on_call_tool] ctx={bool(fctx)} tool={getattr(context, 'tool_name', None)}")
+        if fctx is None or getattr(fctx, "token", None) is None:
+            logger.info("[MW on_call_tool] NO AUTH CONTEXT o token ausente -> denegado")
+            raise ToolError("Not authenticated")
+
+        # Log de claims disponibles
+        token = getattr(fctx, "token", None)
+        claims = getattr(token, "claims", None) if token else None
+        logger.debug(f"[MW on_call_tool] claims_keys={list(claims.keys()) if isinstance(claims, dict) else None}")
+
+        email = _extract_email_from_context(fctx)
+        logger.info(f"[MW on_call_tool] email_detectado={email}")
+        if not email:
+            logger.info("[MW on_call_tool] sin email en claims -> denegado")
+            raise ToolError("User without email claim")
+
+        if email not in ALLOWED_EMAILS:
+            logger.info(f"[MW on_call_tool] email {email} NO autorizado -> denegado")
+            raise ToolError("User not allowed")
+
+        logger.info(f"[MW on_call_tool] acceso permitido a {email}")
+        return await call_next(context)
+
+    async def on_list_tools(self, context: MiddlewareContext, call_next):
+        fctx = context.fastmcp_context
+        logger.debug(f"[MW on_list_tools] ctx={bool(fctx)}")
+        if fctx is None or getattr(fctx, "token", None) is None:
+            logger.info("[MW on_list_tools] NO AUTH CONTEXT o token ausente -> devolver []")
+            return []
+
+        token = getattr(fctx, "token", None)
+        claims = getattr(token, "claims", None) if token else None
+        logger.debug(f"[MW on_list_tools] claims_keys={list(claims.keys()) if isinstance(claims, dict) else None}")
+
+        email = _extract_email_from_context(fctx)
+        logger.info(f"[MW on_list_tools] email_detectado={email}")
+        if not email:
+            logger.info("[MW on_list_tools] sin email en claims -> devolver []")
+            return []
+
+        if email not in ALLOWED_EMAILS:
+            logger.info(f"[MW on_list_tools] email {email} NO autorizado -> devolver []")
+            return []
+
+        logger.info(f"[MW on_list_tools] email autorizado -> mostrar tools")
+        return await call_next(context)
+
+# -----------------------------------------------------------------------------
+# Server (tools)
 # -----------------------------------------------------------------------------
 def create_server() -> FastMCP:
     mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
 
-    # Añade el middleware de whitelist
+    # Montamos una raíz "/" para evitar 404 ruidosos
+    try:
+        @mcp.app.get("/")
+        def root_ok():
+            return {"status": "ok", "server": MCP_NAME, "time": _now_iso()}
+    except Exception as e:
+        logger.debug(f"No se pudo registrar '/' (no crítico): {e}")
+
+    # Añadimos middleware
     mcp.add_middleware(EmailWhitelistMiddleware())
 
     @mcp.tool()
     def health() -> dict:
         return {"status": "ok", "time": _now_iso()}
+
+    # --- Search flexible (planta / máquina / alerta / componentes) ---
+    @mcp.tool(annotations={"title": "Search info (plant / machine / alert)"})
+    def search_info(
+        plant_id: Optional[str] = None,
+        plant_name: Optional[str] = None,
+        machine_id: Optional[str] = None,
+        machine_name: Optional[str] = None,
+        alert_id: Optional[str] = None,
+        include_components: bool = False,
+        max_alerts: int = 5,
+        max_components: int = 5
+    ) -> Dict[str, Any]:
+        try:
+            pid, plant = _resolve_plant(plant_name, plant_id)
+        except Exception as e:
+            return {"error": f"Plant not found: {e}"}
+
+        result: Dict[str, Any] = {
+            "plant": {"id": pid, "name": plant.get("name"), "acs_code": plant.get("acs_code")}
+        }
+
+        machines = _load_assets_full_for_plant_strict(pid)
+
+        if machine_id or machine_name:
+            filtered = []
+            nname = _normalize(machine_name) if machine_name else None
+            for m in machines:
+                if machine_id and str(m.get("id")) == str(machine_id):
+                    filtered.append(m)
+                elif nname and _normalize(str(m.get("name", ""))) == nname:
+                    filtered.append(m)
+            machines = filtered
+
+        out_machines = []
+        for m in machines:
+            m_obj: Dict[str, Any] = {
+                "id": m.get("id"),
+                "name": m.get("name"),
+                "plant_id": m.get("plant_id"),
+                "area": m.get("area"),
+                "riskScore": m.get("riskScore"),
+                "riskLevel": m.get("riskLevel"),
+                "hasAlerts": m.get("hasAlerts"),
+                "alertCount": m.get("alertCount"),
+                "lastAlertAt": m.get("lastAlertAt"),
+                "topAlertRiskLevel": m.get("topAlertRiskLevel"),
+            }
+            alerts = m.get("alerts", []) or []
+            if alert_id:
+                alerts = [a for a in alerts if str(a.get("alert_id")) == str(alert_id) or str(a.get("id")) == str(alert_id)]
+            alerts = alerts[:max_alerts]
+            out_alerts = []
+            for a in alerts:
+                a_obj = {
+                    "id": a.get("id"),
+                    "alert_id": a.get("alert_id"),
+                    "name": a.get("name"),
+                    "state": a.get("state"),
+                    "riskScore": a.get("riskScore"),
+                    "riskLevel": a.get("riskLevel"),
+                    "timestamp": a.get("timestamp"),
+                }
+                if include_components:
+                    comps = a.get("features", []) or []
+                    a_obj["features"] = _trim_features(comps, max_components)
+                out_alerts.append(a_obj)
+            m_obj["alerts"] = out_alerts
+            out_machines.append(m_obj)
+
+        result["machines"] = out_machines
+        return result
 
     # ---------- PLANTS ----------
     @mcp.tool()
@@ -412,7 +539,6 @@ def create_server() -> FastMCP:
             pid, plant = _resolve_plant(plant_name, plant_id)
             machines = _load_assets_full_for_plant_strict(pid)
 
-            # proyección
             if detail == "names":
                 proj = [_names_machine(m) for m in machines]
             elif detail == "full":
@@ -580,14 +706,12 @@ def create_server() -> FastMCP:
             machines = _load_assets_full_for_plant_strict(pid)
             items = _collect_alert_items(machines, state)
 
-            # proyectar y paginar por alert.id
             maxf = DEFAULT_MAX_FEATURES if (include_features and not max_features) else int(max_features or 0)
             proj = [{
                 "machine": {"id": it["machine"]["id"], "name": it["machine"]["name"]},
                 "alert": _summ_alert(it["alert"], include_features=bool(include_features), max_features=maxf)
             } for it in items]
 
-            # ordenar por timestamp desc para que 'cursor' sea estable
             def _ts_key(x): return _parse_ts(x["alert"].get("timestamp")) or datetime.min
             proj.sort(key=_ts_key, reverse=True)
 
@@ -650,9 +774,8 @@ def create_server() -> FastMCP:
             pid, plant = _resolve_plant(plant_name, plant_id)
             machines = _load_assets_full_for_plant_strict(pid)
 
-            # filtro opcional por máquina
             if machine_id or machine_name:
-                nname = _normalize_name(machine_name)
+                nname = _normalize(machine_name) if machine_name else None
                 machines = [
                     m for m in machines
                     if (machine_id and str(m.get("id")) == str(machine_id)) or
@@ -694,7 +817,6 @@ def create_server() -> FastMCP:
             if not found:
                 return {"error": "Alert not found"}
             machine, alert = found
-            # plant meta
             plant = next((p for p in _load_plants_strict() if str(p.get("id")) == str(machine.get("plant_id"))), None)
             feats = _trim_features(alert.get("features", []) or [], int(max_features or 0))
             return {
