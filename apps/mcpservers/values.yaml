@@ -63,6 +63,8 @@ app-template:
         nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
         nginx.ingress.kubernetes.io/proxy-buffering: "off"
         nginx.ingress.kubernetes.io/proxy-buffer-size: "16k"
+        nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+        nginx.ingress.kubernetes.io/client-body-buffer-size: "16k"
       hosts:
       - host: &host mcpservers.dbcloud.org
         paths:

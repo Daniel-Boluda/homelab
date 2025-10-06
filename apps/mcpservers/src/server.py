@@ -441,7 +441,7 @@ def create_server() -> FastMCP:
         logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
         
     # Añadimos middleware
-    mcp.add_middleware(EmailWhitelistMiddleware())
+    # mcp.add_middleware(EmailWhitelistMiddleware())
 
     @mcp.tool()
     def health() -> dict:
