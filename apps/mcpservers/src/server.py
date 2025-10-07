@@ -48,7 +48,6 @@ from fastmcp import FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth.providers.google import GoogleProvider
-from fastmcp.server.dependencies import get_access_token
 
 # -----------------------------------------------------------------------------
 # Logging
@@ -519,22 +518,6 @@ def create_server() -> FastMCP:
         result["machines"] = out_machines
         return result
 
-    # ---------- USERS ----------
-    @mcp.tool
-    async def get_user_info() -> dict:
-        """Returns information about the authenticated Google user."""
-        from fastmcp.server.dependencies import get_access_token
-        
-        token = get_access_token()
-        # The GoogleProvider stores user data in token claims
-        return {
-            "google_id": token.claims.get("sub"),
-            "email": token.claims.get("email"),
-            "name": token.claims.get("name"),
-            "picture": token.claims.get("picture"),
-            "locale": token.claims.get("locale")
-        }
-        
     # ---------- PLANTS ----------
     @mcp.tool()
     def list_plants() -> dict:
