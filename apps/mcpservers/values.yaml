@@ -16,9 +16,10 @@ app-template:
             PYTHONUNBUFFERED: 1 
             PIP_NO_CACHE_DIR: 1
             FASTMCP_LOGLEVEL: DEBUG
+            MCP_PATH: /mcp
             MCP_NAME: mcp-server
             MCP_HOST: 0.0.0.0
-            MCP_PORT: 18000
+            MCP_PORT: 8000
             BASE_URL: https://mcpservers.dbcloud.org
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com"
           envFrom:
@@ -47,7 +48,7 @@ app-template:
       controller: mcpservers
       ports:
         http:
-          port: 18000
+          port: 8000
 
   ingress:
     external:

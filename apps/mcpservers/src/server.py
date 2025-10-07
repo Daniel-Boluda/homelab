@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Plant Risk MCP Server (compact output + pagination)
+Plant Risk MCP Server
 
 Archivos esperados (formatos estrictos):
 - ./data/plants.json                   -> objeto con clave 'plants' (array)
@@ -63,7 +63,8 @@ ROOT = Path(__file__).parent
 DATA_DIR = Path(os.getenv("DATA_DIR", ROOT / "data"))
 MCP_NAME = os.getenv("MCP_NAME", "mcp-server")
 MCP_HOST = os.getenv("MCP_HOST", "0.0.0.0")
-MCP_PORT = int(os.getenv("MCP_PORT", "18000"))
+MCP_PORT = int(os.getenv("MCP_PORT", "8000"))
+MCP_PATH = os.getenv("MCP_PATH", "/mcp")
 
 DEFAULT_PAGE_SIZE = int(os.getenv("DEFAULT_PAGE_SIZE", "50"))
 DEFAULT_MAX_FEATURES = int(os.getenv("DEFAULT_MAX_FEATURES", "3"))
@@ -71,6 +72,7 @@ DEFAULT_MAX_FEATURES = int(os.getenv("DEFAULT_MAX_FEATURES", "3"))
 SERVER_INSTRUCTIONS = """
 This MCP server serves plant risk data from local JSON files under ./data.
 Auth: Google OAuth. Access restricted by email whitelist (ALLOWED_EMAILS).
+Transport: Streamable HTTP ("http"), endpoint at MCP_PATH (default /mcp).
 To keep responses small:
 - Default detail is 'summary'; use 'names' for id+name only; use 'full' sparingly.
 - All list tools are paginated with 'page_size' and 'cursor'.
@@ -92,8 +94,8 @@ google_auth = GoogleProvider(
     client_secret=GOOGLE_CLIENT_SECRET,
     base_url=BASE_URL,
     required_scopes=[
-    "openid",
-    "https://www.googleapis.com/auth/userinfo.email",
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
     ],
 )
 
@@ -454,11 +456,11 @@ def create_server() -> FastMCP:
         mcp.app.add_api_route("/", root_ok, methods=["GET"])
     except Exception as e:
         logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
-        
+
     # Añadimos middleware
     # mcp.add_middleware(EmailWhitelistMiddleware())
-        
-    @mcp.tool()
+
+    @mcp.tool(description="Comprueba que el servidor está vivo y devuelve {status,time}.")
     def health() -> dict:
         return {"status": "ok", "time": _now_iso()}
 
@@ -898,9 +900,11 @@ def create_server() -> FastMCP:
 def main():
     logger.info(f"Data dir (STRICT): {DATA_DIR}")
     server = create_server()
-    logger.info(f"Starting MCP server '{MCP_NAME}' on {MCP_HOST}:{MCP_PORT} (SSE) with email whitelist")
+    logger.info(
+        f"Starting MCP server '{MCP_NAME}' on {MCP_HOST}:{MCP_PORT}{MCP_PATH} (HTTP Stream) with email whitelist"
+    )
     try:
-        server.run(transport="sse", host=MCP_HOST, port=MCP_PORT)
+        server.run(transport="http", host=MCP_HOST, port=MCP_PORT, path=MCP_PATH)
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
