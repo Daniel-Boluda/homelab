@@ -418,30 +418,6 @@ class EmailWhitelistMiddleware(Middleware):
         logger.info(f"[MW on_call_tool] acceso permitido a {email}")
         return await call_next(context)
 
-    async def on_list_tools(self, context: MiddlewareContext, call_next):
-        fctx = context.fastmcp_context
-        logger.debug(f"[MW on_list_tools] ctx={bool(fctx)}")
-        if fctx is None or getattr(fctx, "token", None) is None:
-            logger.info("[MW on_list_tools] NO AUTH CONTEXT o token ausente -> devolver []")
-            return []
-
-        token = getattr(fctx, "token", None)
-        claims = getattr(token, "claims", None) if token else None
-        logger.debug(f"[MW on_list_tools] claims_keys={list(claims.keys()) if isinstance(claims, dict) else None}")
-
-        email = _extract_email_from_context(fctx)
-        logger.info(f"[MW on_list_tools] email_detectado={email}")
-        if not email:
-            logger.info("[MW on_list_tools] sin email en claims -> devolver []")
-            return []
-
-        if email not in ALLOWED_EMAILS:
-            logger.info(f"[MW on_list_tools] email {email} NO autorizado -> devolver []")
-            return []
-
-        logger.info(f"[MW on_list_tools] email autorizado -> mostrar tools")
-        return await call_next(context)
-
 # -----------------------------------------------------------------------------
 # Server (tools)
 # -----------------------------------------------------------------------------
