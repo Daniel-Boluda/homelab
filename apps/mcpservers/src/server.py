@@ -392,37 +392,19 @@ def _extract_email_from_context(fctx) -> Optional[str]:
         logger.warning(f"[AUTH] error extrayendo email del contexto: {ex}")
     return None
 
-class EmailWhitelistMiddleware(Middleware):
-    async def on_call_tool(self, context: MiddlewareContext, call_next):
-        fctx = context.fastmcp_context
-        logger.debug(f"[MW on_call_tool] ctx={bool(fctx)} tool={getattr(context, 'tool_name', None)}")
-        if fctx is None or getattr(fctx, "token", None) is None:
-            logger.info("[MW on_call_tool] NO AUTH CONTEXT o token ausente -> denegado")
-            raise ToolError("Not authenticated")
-
-        # Log de claims disponibles
-        token = getattr(fctx, "token", None)
-        claims = getattr(token, "claims", None) if token else None
-        logger.debug(f"[MW on_call_tool] claims_keys={list(claims.keys()) if isinstance(claims, dict) else None}")
-
-        email = _extract_email_from_context(fctx)
-        logger.info(f"[MW on_call_tool] email_detectado={email}")
-        if not email:
-            logger.info("[MW on_call_tool] sin email en claims -> denegado")
-            raise ToolError("User without email claim")
-
-        if email not in ALLOWED_EMAILS:
-            logger.info(f"[MW on_call_tool] email {email} NO autorizado -> denegado")
-            raise ToolError("User not allowed")
-
-        logger.info(f"[MW on_call_tool] acceso permitido a {email}")
-        return await call_next(context)
-
 # -----------------------------------------------------------------------------
 # Server (tools)
 # -----------------------------------------------------------------------------
+def validate_email(userinfo: dict):
+    email = userinfo.get("email")
+    logger.info(f"[MW on_call_tool] email {email}")
+    if not email or email not in ALLOWED_EMAILS:
+        logger.info(f"[MW on_call_tool] email {email} NO autorizado -> denegado")
+        raise PermissionError(f"Email {email} no autorizado")
+    return userinfo  # importante: devolverlo si todo va bien
+
 def create_server() -> FastMCP:
-    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
+    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS, on_auth_complete=validate_email)
     #mcp = FastMCP(name=MCP_NAME, instructions=SERVER_INSTRUCTIONS)
 
     async def root_ok(request):
@@ -434,7 +416,7 @@ def create_server() -> FastMCP:
         logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
 
     # Añadimos middleware
-    mcp.add_middleware(EmailWhitelistMiddleware())
+    # mcp.add_middleware(EmailWhitelistMiddleware())
 
     @mcp.tool(description="Comprueba que el servidor está vivo y devuelve {status,time}.")
     def health() -> dict:
