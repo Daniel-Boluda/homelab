@@ -48,6 +48,7 @@ from fastmcp import FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth.providers.google import GoogleProvider
+from fastmcp.server.dependencies import get_access_token
 
 # -----------------------------------------------------------------------------
 # Logging
@@ -392,19 +393,43 @@ def _extract_email_from_context(fctx) -> Optional[str]:
         logger.warning(f"[AUTH] error extrayendo email del contexto: {ex}")
     return None
 
+class EmailWhitelistMiddleware(Middleware):
+    async def on_call_tool(self, context: MiddlewareContext, call_next):
+        # Usa el token directamente desde la dependencia del servidor
+        try:
+            token = get_access_token()
+        except Exception as e:
+            logger.info(f"[MW on_call_tool] NO AUTH TOKEN -> denegado ({e})")
+            raise ToolError("Not authenticated")
+
+        # Claims del proveedor (GoogleProvider los coloca en token.claims)
+        claims = getattr(token, "claims", None) or {}
+        logger.debug(f"[MW on_call_tool] tool={getattr(context, 'tool_name', None)} claims_keys={list(claims.keys())}")
+
+        # Extrae datos básicos (opcional, útil para logs)
+        google_id = claims.get("sub")
+        email = (claims.get("email") or "").strip().lower() or None
+        name = claims.get("name")
+        locale = claims.get("locale")
+
+        logger.info(f"[MW on_call_tool] user sub={google_id} email={email} name={name} locale={locale}")
+
+        if not email:
+            logger.info("[MW on_call_tool] sin email en claims -> denegado")
+            raise ToolError("User without email claim")
+
+        if email not in ALLOWED_EMAILS:
+            logger.info(f"[MW on_call_tool] email {email} NO autorizado -> denegado")
+            raise ToolError("User not allowed")
+
+        logger.info(f"[MW on_call_tool] acceso permitido a {email}")
+        return await call_next(context)
+
 # -----------------------------------------------------------------------------
 # Server (tools)
 # -----------------------------------------------------------------------------
-def validate_email(userinfo: dict):
-    email = userinfo.get("email")
-    logger.info(f"[MW on_call_tool] email {email}")
-    if not email or email not in ALLOWED_EMAILS:
-        logger.info(f"[MW on_call_tool] email {email} NO autorizado -> denegado")
-        raise PermissionError(f"Email {email} no autorizado")
-    return userinfo  # importante: devolverlo si todo va bien
-
 def create_server() -> FastMCP:
-    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS, on_auth_complete=validate_email)
+    mcp = FastMCP(name=MCP_NAME, auth=google_auth, instructions=SERVER_INSTRUCTIONS)
     #mcp = FastMCP(name=MCP_NAME, instructions=SERVER_INSTRUCTIONS)
 
     async def root_ok(request):
@@ -416,7 +441,7 @@ def create_server() -> FastMCP:
         logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
 
     # Añadimos middleware
-    # mcp.add_middleware(EmailWhitelistMiddleware())
+    mcp.add_middleware(EmailWhitelistMiddleware())
 
     @mcp.tool(description="Comprueba que el servidor está vivo y devuelve {status,time}.")
     def health() -> dict:
@@ -494,6 +519,22 @@ def create_server() -> FastMCP:
         result["machines"] = out_machines
         return result
 
+    # ---------- USERS ----------
+    @mcp.tool
+    async def get_user_info() -> dict:
+        """Returns information about the authenticated Google user."""
+        from fastmcp.server.dependencies import get_access_token
+        
+        token = get_access_token()
+        # The GoogleProvider stores user data in token claims
+        return {
+            "google_id": token.claims.get("sub"),
+            "email": token.claims.get("email"),
+            "name": token.claims.get("name"),
+            "picture": token.claims.get("picture"),
+            "locale": token.claims.get("locale")
+        }
+        
     # ---------- PLANTS ----------
     @mcp.tool()
     def list_plants() -> dict:
