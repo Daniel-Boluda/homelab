@@ -21,7 +21,7 @@ app-template:
             MCP_HOST: 0.0.0.0
             MCP_PORT: 8000
             BASE_URL: https://mcpservers.dbcloud.org
-            ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com,mhussien.khalil@gmail.com"
+            ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com,mhussien.khalil@gmail.com,prabeshraj.joshi@holcim.com"
           envFrom:
           - secretRef:
               name: mcpservers-secrets
