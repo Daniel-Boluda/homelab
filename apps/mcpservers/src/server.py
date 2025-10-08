@@ -48,6 +48,7 @@ from fastmcp import FastMCP
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.exceptions import ToolError
 from fastmcp.server.auth.providers.google import GoogleProvider
+from fastmcp.server.dependencies import get_access_token
 
 # -----------------------------------------------------------------------------
 # Logging
@@ -351,47 +352,6 @@ def _find_machine_global(machine_id: Optional[str], machine_name: Optional[str])
     plant_obj = plant_map.get(str(m.get("plant_id"))) if m.get("plant_id") is not None else None
     return m, plant_obj
 
-# -----------------------------------------------------------------------------
-# Middleware con logs detallados
-# -----------------------------------------------------------------------------
-def _extract_email_from_context(fctx) -> Optional[str]:
-    """
-    Intenta sacar el email del contexto de FastMCP de forma robusta:
-    - fctx.user.email
-    - fctx.user.get("email")
-    - fctx.token.claims["email"]
-    """
-    try:
-        logger.debug(f"[AUTH] fctx type={type(fctx)}")
-        user = getattr(fctx, "user", None)
-        token = getattr(fctx, "token", None)
-        claims = getattr(token, "claims", None) if token else None
-
-        logger.debug(f"[AUTH] user(raw)={user!r}")
-        logger.debug(f"[AUTH] token(raw)={token!r}")
-        logger.debug(f"[AUTH] claims(raw)={claims!r}")
-
-        if user:
-            e1 = getattr(user, "email", None)
-            if e1:
-                email = str(e1).lower()
-                logger.info(f"[AUTH] email por user.email -> {email}")
-                return email
-            if isinstance(user, dict) and user.get("email"):
-                email = str(user["email"]).lower()
-                logger.info(f"[AUTH] email por user['email'] -> {email}")
-                return email
-
-        if isinstance(claims, dict) and claims.get("email"):
-            email = str(claims["email"]).lower()
-            logger.info(f"[AUTH] email por token.claims['email'] -> {email}")
-            return email
-
-        logger.warning("[AUTH] No se pudo extraer email del contexto")
-    except Exception as ex:
-        logger.warning(f"[AUTH] error extrayendo email del contexto: {ex}")
-    return None
-
 class EmailWhitelistMiddleware(Middleware):
     async def on_call_tool(self, context: MiddlewareContext, call_next):
         # Usa el token directamente desde la dependencia del servidor
@@ -440,7 +400,7 @@ def create_server() -> FastMCP:
         logger.warning(f"No se pudo registrar '/' (no crítico): {e}")
 
     # Añadimos middleware
-    # mcp.add_middleware(EmailWhitelistMiddleware())
+    mcp.add_middleware(EmailWhitelistMiddleware())
 
     @mcp.tool(description="Comprueba que el servidor está vivo y devuelve {status,time}.")
     def health() -> dict:
@@ -517,6 +477,22 @@ def create_server() -> FastMCP:
 
         result["machines"] = out_machines
         return result
+
+    # ---------- USERS ----------
+    @mcp.tool
+    async def get_user_info() -> dict:
+        """Returns information about the authenticated Google user."""
+        from fastmcp.server.dependencies import get_access_token
+        
+        token = get_access_token()
+        # The GoogleProvider stores user data in token claims
+        return {
+            "google_id": token.claims.get("sub"),
+            "email": token.claims.get("email"),
+            "name": token.claims.get("name"),
+            "picture": token.claims.get("picture"),
+            "locale": token.claims.get("locale")
+        }
 
     # ---------- PLANTS ----------
     @mcp.tool()
