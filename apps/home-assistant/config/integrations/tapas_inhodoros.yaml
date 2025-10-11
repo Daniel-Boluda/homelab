@@ -16,28 +16,19 @@ automation:
       - choose:
           # Aseo
           - conditions:
+              - condition: numeric_state
+                entity_id: sensor.tapa_inhodoro_aseo_z
+                below: 100
               - condition: state
                 entity_id: switch.luz_banera
                 state: "off"
               - condition: state
                 entity_id: switch.luz_aseo
                 state: "off"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
-              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
-              - condition: and
-                conditions:
-                  - condition: numeric_state
-                    entity_id: sensor.tapa_inhodoro_aseo_z
-                    below: 100
-                  - condition: state
-                    entity_id: switch.luz_banera
-                    state: "off"
-                  - condition: state
-                    entity_id: switch.luz_aseo
-                    state: "off"
-                  - condition: state
-                    entity_id: input_boolean.home_announcements_active
-                    state: "on"
               - service: notify.send_message
                 data:
                   message: "Recuerda bajar la tapa del inodoro del aseo."
@@ -47,28 +38,19 @@ automation:
 
           # Baño
           - conditions:
+              - condition: numeric_state
+                entity_id: sensor.tapa_inhodoro_bano_z
+                below: 100
               - condition: state
                 entity_id: switch.luz_bano_dormitorio
                 state: "off"
               - condition: state
                 entity_id: switch.luz_ducha_dormitorio
                 state: "off"
+              - condition: state
+                entity_id: input_boolean.home_announcements_active
+                state: "on"
             sequence:
-              - delay: "00:00:05"  # Espera para que Zigbee actualice estados
-              - condition: and
-                conditions:
-                  - condition: numeric_state
-                    entity_id: sensor.tapa_inhodoro_bano_z
-                    below: 100
-                  - condition: state
-                    entity_id: switch.luz_bano_dormitorio
-                    state: "off"
-                  - condition: state
-                    entity_id: switch.luz_ducha_dormitorio
-                    state: "off"
-                  - condition: state
-                    entity_id: input_boolean.home_announcements_active
-                    state: "on"
               - service: notify.send_message
                 data:
                   message: "Recuerda bajar la tapa del inodoro del baño."
