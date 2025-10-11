@@ -27,11 +27,11 @@ open-webui:
       name: open-webui-redis
       image:
         repository: redis
-        tag: 8.0.3-alpine3.21
+        tag: 8.0.4-alpine3.21
 
   image:
     repository: ghcr.io/open-webui/open-webui
-    tag: 0.6.32
+    tag: 0.6.33
 
   ingress:
     enabled: true
