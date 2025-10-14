@@ -2,8 +2,8 @@
 FROM python:3.14-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates curl tini && \
-    rm -rf /var/lib/apt/lists/*
+    ca-certificates curl tini build-essential libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

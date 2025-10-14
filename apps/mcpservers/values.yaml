@@ -9,7 +9,7 @@ app-template:
         main:
           image:
             repository: bolferdocker/fastmcp-base
-            tag: 0.0.2
+            tag: 0.0.3
           env:
             TZ: Europe/Madrid
             PYTHONDONTWRITEBYTECODE: 1 
