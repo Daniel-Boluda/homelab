@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 RUN pip install --upgrade pip && \
-    pip install fastmcp fastapi
+    pip install fastmcp fastapi asyncpg
 
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
