@@ -806,9 +806,11 @@ def create_server() -> FastMCP:
         pid = int(plant["id"])
 
         where_state = "" if s == "any" else "AND lower(m.state) = %s"
-        params: List[Any] = [pid, after_id, ps]
-        if s != "any":
-            params.append(s)
+
+        if s == "any":
+            params = (pid, after_id, ps)
+        else:
+            params = (pid, after_id, s, ps)
 
         select_features = "m.feature_contribution" if include_features else "NULL::jsonb"
         sql = f"""
@@ -826,12 +828,13 @@ def create_server() -> FastMCP:
             FROM public.mpredict_mpredictalert m
             JOIN public.mpredict_asset a ON a.id = m.asset_id
             WHERE a.plant_id = %s
-              AND m.id > %s
-              {where_state}
+            AND m.id > %s
+            {where_state}
             ORDER BY m.id
             LIMIT %s;
         """
-        rows = await fetch_all(sql, tuple(params))
+
+        rows = await fetch_all(sql, params)
 
         mf = int(max_features) if (include_features and max_features) else 0
         alerts_out = []
@@ -869,6 +872,7 @@ def create_server() -> FastMCP:
             "alerts": alerts_out,
         }
 
+
     # -------- list_alerts (global) --------
     @mcp.tool(description="Lista alertas global (state=Open|Closed|Any), include_features opcional.")
     async def list_alerts(
@@ -886,9 +890,11 @@ def create_server() -> FastMCP:
         after_id = int(cursor) if cursor else 0
 
         where_state = "" if s == "any" else "AND lower(m.state) = %s"
-        params: List[Any] = [after_id, ps]
-        if s != "any":
-            params.append(s)
+
+        if s == "any":
+            params = (after_id, ps)
+        else:
+            params = (after_id, s, ps)
 
         select_features = "m.feature_contribution" if include_features else "NULL::jsonb"
         sql = f"""
@@ -910,11 +916,12 @@ def create_server() -> FastMCP:
             JOIN public.mpredict_asset a ON a.id = m.asset_id
             JOIN public.plants_plant p ON p.id = a.plant_id
             WHERE m.id > %s
-              {where_state}
+            {where_state}
             ORDER BY m.id
             LIMIT %s;
         """
-        rows = await fetch_all(sql, tuple(params))
+
+        rows = await fetch_all(sql, params)
 
         mf = int(max_features) if (include_features and max_features) else 0
         alerts_out = []
