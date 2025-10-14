@@ -113,6 +113,6 @@ app-template:
       type: secret
       name: gcloud-adc
       globalMounts:
-        - path: /var/secrets/gcloud/adc.json
-          subPath: adc.json
+        - path: /var/secrets/gcloud/application_default_credentials.json
+          subPath: application_default_credentials_json
           readOnly: true
