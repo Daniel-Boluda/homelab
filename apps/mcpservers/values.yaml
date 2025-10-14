@@ -22,7 +22,7 @@ app-template:
             MCP_PORT: 8000
             BASE_URL: https://mcpservers.dbcloud.org
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com,mhussien.khalil@gmail.com,prabeshraj.joshi@holcim.com"
-            GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/application_default_credentials.json
+            GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcloud/adc.json
 
           envFrom:
           - secretRef:
@@ -113,6 +113,6 @@ app-template:
       type: secret
       name: gcloud-adc
       globalMounts:
-        - path: /root/.config/gcloud/application_default_credentials.json
+        - path: /var/secrets/gcloud/adc.json
           subPath: application_default_credentials.json
           readOnly: true
