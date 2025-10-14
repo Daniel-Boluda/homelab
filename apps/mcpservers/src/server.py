@@ -55,8 +55,8 @@ MCP_HOST = os.getenv("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.getenv("MCP_PORT", "8000"))
 MCP_PATH = os.getenv("MCP_PATH", "/mcp")
 
-DEFAULT_PAGE_SIZE = int(os.getenv("DEFAULT_PAGE_SIZE", "50"))
-DEFAULT_MAX_FEATURES = int(os.getenv("DEFAULT_MAX_FEATURES", "3"))
+DEFAULT_PAGE_SIZE = int(os.getenv("DEFAULT_PAGE_SIZE", "1000"))
+DEFAULT_MAX_FEATURES = int(os.getenv("DEFAULT_MAX_FEATURES", "1000"))
 
 SERVER_INSTRUCTIONS = """
 DB-backed Plant Risk MCP Server.
