@@ -14,8 +14,27 @@ Run with:
 import asyncio
 from fastmcp.client import Client
 
-SERVER_URL = "https://mcpservers.dbcloud.org/mcp"
+#SERVER_URL = "https://mcpservers.dbcloud.org/mcp"
+SERVER_URL = "http://0.0.0.0:8000"
 
+def payload_from_call(result):
+    # 1) Preferir structured_content (ya es un dict)
+    if hasattr(result, "structured_content") and result.structured_content:
+        return result.structured_content
+    # 2) Algunas builds exponen .data como dict
+    if hasattr(result, "data") and isinstance(result.data, dict):
+        return result.data
+    # 3) Si vino como texto en .content -> parsear JSON
+    content = getattr(result, "content", None)
+    if isinstance(content, list) and content:
+        part = content[0]
+        text = getattr(part, "text", None) or getattr(part, "value", None)
+        if isinstance(text, str):
+            return json.loads(text)
+        if isinstance(text, dict):
+            return text
+    # 4) Último recurso: nada
+    return {}
 
 async def main():
     try:
@@ -48,7 +67,8 @@ async def main():
             if any(t.name == "list_plants" for t in tools):
                 print("\n🌱 Fetching list of plants...")
                 result = await client.call_tool("list_plants")
-                plants = result.get("plants", [])
+                data = payload_from_call(result)
+                plants = data.get("plants", [])
                 print(f"✅ Received {len(plants)} plants:")
                 for p in plants[:5]:  # print up to 5 plants
                     print(f"   - {p.get('id')} | {p.get('name')} | code={p.get('acs_code')}")
