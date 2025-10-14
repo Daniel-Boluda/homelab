@@ -15,7 +15,7 @@ import asyncio
 from fastmcp.client import Client
 
 #SERVER_URL = "https://mcpservers.dbcloud.org/mcp"
-SERVER_URL = "http://0.0.0.0:8000"
+SERVER_URL = "http://127.0.0.1:8000/mcp"
 
 def payload_from_call(result):
     # 1) Preferir structured_content (ya es un dict)
