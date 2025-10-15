@@ -2,9 +2,32 @@ from typing import Optional, List, Any, Dict
 from src.deps import db, utils
 from fastmcp import FastMCP
 
+
 def _add_filter(where: List[str], params: List[Any], clause: str, *values: Any):
     where.append(clause)
     params.extend(values)
+
+
+async def _resolve_plant_id(plant_id: Optional[str], plant_name: Optional[str]) -> Optional[int]:
+    """Resuelve el id de planta por id directo o por nombre (normalizado)."""
+    if plant_id:
+        return int(plant_id)
+    if plant_name:
+        p = await db.fetch_one(
+            "SELECT id FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
+            (plant_name,),
+        )
+        if p:
+            return int(p["id"])
+        plants = await db.fetch_all(
+            "SELECT id, name FROM public.plants_plant WHERE deleted_at IS NULL"
+        )
+        target = utils._norm(plant_name)
+        match = next((pp for pp in plants if utils._norm(pp["name"]) == target), None)
+        if match:
+            return int(match["id"])
+    return None
+
 
 def register(mcp: FastMCP):
     # ---------------------------
@@ -31,7 +54,6 @@ def register(mcp: FastMCP):
         if work_center:
             _add_filter(where, params, "work_center = %s", work_center)
         if user_status:
-            # estado tal cual (ej. '1crt','5com'); ajusta a ILIKE si necesitas más laxo
             _add_filter(where, params, "user_status = %s", user_status)
         if date_from:
             _add_filter(where, params, "start_date >= %s", date_from)
@@ -92,29 +114,11 @@ def register(mcp: FastMCP):
         page_size: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> dict:
-        # Resolver planta (igual que en mpredict.py)
-        pid = None
-        if plant_id:
-            pid = int(plant_id)
-        elif plant_name:
-            p = await db.fetch_one(
-                "SELECT id FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
-                (plant_name,),
-            )
-            if not p:
-                # fallback normalizado
-                plants = await db.fetch_all(
-                    "SELECT id, name FROM public.plants_plant WHERE deleted_at IS NULL"
-                )
-                target = utils._norm(plant_name)
-                match = next((pp for pp in plants if utils._norm(pp["name"]) == target), None)
-                pid = int(match["id"]) if match else None
-            else:
-                pid = int(p["id"])
+        pid = await _resolve_plant_id(plant_id, plant_name)
         if not pid:
             return {"error": "Plant not found"}
 
-        return await list_workorders(
+        return await minspect_list_workorders(
             plant_id=str(pid),
             work_center=work_center,
             user_status=user_status,
@@ -160,10 +164,12 @@ def register(mcp: FastMCP):
     async def minspect_list_notifications(
         plant_id: Optional[str] = None,
         priority: Optional[str] = None,         # 'P','U', etc.
-        system_status: Optional[str] = None,     # exacto o ILIKE parcial
+        system_status: Optional[str] = None,     # exacto o ILIKE parcial (subcadena)
         year: Optional[int] = None,
         month: Optional[int] = None,
         week: Optional[int] = None,
+        date_from: Optional[str] = None,         # ISO YYYY-MM-DD (creation_date)
+        date_to: Optional[str] = None,           # ISO YYYY-MM-DD
         created_by: Optional[str] = None,
         planner_grb: Optional[str] = None,
         page_size: Optional[int] = None,
@@ -178,11 +184,11 @@ def register(mcp: FastMCP):
         if year:         _add_filter(where, params, "year = %s", int(year))
         if month:        _add_filter(where, params, "month = %s", int(month))
         if week:         _add_filter(where, params, "week = %s", int(week))
+        if date_from:    _add_filter(where, params, "creation_date >= %s", date_from)
+        if date_to:      _add_filter(where, params, "creation_date <= %s", date_to)
         if created_by:   _add_filter(where, params, "created_by = %s", created_by)
         if planner_grb:  _add_filter(where, params, "planner_grb = %s", planner_grb)
         if system_status:
-            # La columna suele contener CSV del tipo 'ORAS,NOPR' (según tu captura),
-            # por lo que aplicamos búsqueda parcial.
             _add_filter(where, params, "system_status ILIKE %s", f"%{system_status}%")
 
         where_sql = " AND ".join(where)
@@ -247,37 +253,28 @@ def register(mcp: FastMCP):
         year: Optional[int] = None,
         month: Optional[int] = None,
         week: Optional[int] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        created_by: Optional[str] = None,
+        planner_grb: Optional[str] = None,
         page_size: Optional[int] = None,
         cursor: Optional[str] = None,
     ) -> dict:
-        # Resolver plant_id como en mpredict
-        pid = None
-        if plant_id:
-            pid = int(plant_id)
-        elif plant_name:
-            p = await db.fetch_one(
-                "SELECT id FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
-                (plant_name,),
-            )
-            if not p:
-                plants = await db.fetch_all(
-                    "SELECT id, name FROM public.plants_plant WHERE deleted_at IS NULL"
-                )
-                target = utils._norm(plant_name)
-                match = next((pp for pp in plants if utils._norm(pp["name"]) == target), None)
-                pid = int(match["id"]) if match else None
-            else:
-                pid = int(p["id"])
+        pid = await _resolve_plant_id(plant_id, plant_name)
         if not pid:
             return {"error": "Plant not found"}
 
-        return await list_notifications(
+        return await minspect_list_notifications(
             plant_id=str(pid),
             priority=priority,
             system_status=system_status,
             year=year,
             month=month,
             week=week,
+            date_from=date_from,
+            date_to=date_to,
+            created_by=created_by,
+            planner_grb=planner_grb,
             page_size=page_size,
             cursor=cursor,
         )
@@ -298,7 +295,6 @@ def register(mcp: FastMCP):
 
     @mcp.tool(description="Resumen de notificaciones por system_status (match parcial) en una planta.")
     async def minspect_notifications_by_system_status_in_plant(plant_id: str) -> dict:
-        # Si system_status contiene CSV, contamos por token principal (split por coma)
         rows = await db.fetch_all(
             """
             WITH tokens AS (
@@ -316,7 +312,9 @@ def register(mcp: FastMCP):
         return {"plant_id": str(plant_id), "buckets": rows}
 
     @mcp.tool(description="Resumen semanal (year,week) de notificaciones para una planta.")
-    async def minspect_notifications_weekly_trend_in_plant(plant_id: str, year: Optional[int] = None) -> dict:
+    async def minspect_notifications_weekly_trend_in_plant(
+        plant_id: str, year: Optional[int] = None
+    ) -> dict:
         if year:
             rows = await db.fetch_all(
                 """
@@ -340,3 +338,72 @@ def register(mcp: FastMCP):
                 (int(plant_id),),
             )
         return {"plant_id": str(plant_id), "trend": rows}
+
+    # ---------------------------
+    # COUNTS (para preguntas del tipo “¿cuántas…?”)
+    # ---------------------------
+
+    @mcp.tool(description="Cuenta notificaciones (global) con filtros: mes, semana, rango fechas, planner_grb, created_by, etc.")
+    async def minspect_count_notifications(
+        plant_id: Optional[str] = None,
+        priority: Optional[str] = None,
+        system_status: Optional[str] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        week: Optional[int] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        created_by: Optional[str] = None,
+        planner_grb: Optional[str] = None,
+    ) -> dict:
+        where, params = [], []
+
+        if plant_id:     _add_filter(where, params, "plant_id = %s", int(plant_id))
+        if priority:     _add_filter(where, params, "priority = %s", priority)
+        if year:         _add_filter(where, params, "year = %s", int(year))
+        if month:        _add_filter(where, params, "month = %s", int(month))
+        if week:         _add_filter(where, params, "week = %s", int(week))
+        if date_from:    _add_filter(where, params, "creation_date >= %s", date_from)
+        if date_to:      _add_filter(where, params, "creation_date <= %s", date_to)
+        if created_by:   _add_filter(where, params, "created_by = %s", created_by)
+        if planner_grb:  _add_filter(where, params, "planner_grb = %s", planner_grb)
+        if system_status:
+            _add_filter(where, params, "system_status ILIKE %s", f"%{system_status}%")
+
+        where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+        row = await db.fetch_one(
+            f"SELECT COUNT(*)::int AS count FROM public.minspect_minspectdata {where_sql};",
+            tuple(params) if params else None,
+        )
+        return {"count": row["count"] if row else 0}
+
+    @mcp.tool(description="Cuenta notificaciones en una planta con filtros (mes, semana, entre fechas, planner_grb, created_by, etc.).")
+    async def minspect_count_notifications_in_plant(
+        plant_id: Optional[str] = None,
+        plant_name: Optional[str] = None,
+        priority: Optional[str] = None,
+        system_status: Optional[str] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        week: Optional[int] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        created_by: Optional[str] = None,
+        planner_grb: Optional[str] = None,
+    ) -> dict:
+        pid = await _resolve_plant_id(plant_id, plant_name)
+        if not pid:
+            return {"error": "Plant not found"}
+
+        return await minspect_count_notifications(
+            plant_id=str(pid),
+            priority=priority,
+            system_status=system_status,
+            year=year,
+            month=month,
+            week=week,
+            date_from=date_from,
+            date_to=date_to,
+            created_by=created_by,
+            planner_grb=planner_grb,
+        )
