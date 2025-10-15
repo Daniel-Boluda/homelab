@@ -12,6 +12,7 @@ app-template:
             tag: 0.0.5
           env:
             TZ: Europe/Madrid
+            PYTHONPATH: /app
             PYTHONDONTWRITEBYTECODE: 1 
             PYTHONUNBUFFERED: 1 
             PIP_NO_CACHE_DIR: 1
@@ -100,9 +101,21 @@ app-template:
         - path: /app/server.py
           subPath: server_script.py
           readOnly: true
-        - path: /app/mcp.json
-          subPath: server_mcp.json
+    src-deps:
+      enabled: true
+      type: configMap
+      name: server-src-deps
+      globalMounts:
+        - path: /app/deps
           readOnly: true
+    src-tools:
+      enabled: true
+      type: configMap
+      name: server-src-tools
+      globalMounts:
+        - path: /app/tools
+          readOnly: true
+
     data:
       enabled: true
       globalMounts:
