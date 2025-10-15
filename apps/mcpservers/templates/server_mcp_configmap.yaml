@@ -6,5 +6,25 @@ metadata:
 data:
   server_script.py: |-
 {{ .Files.Get "src/server.py" | indent 4 }}
-  server_mcp.json: |-
-{{ .Files.Get "src/server_mcp.json" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-src-deps
+  namespace: mcpservers
+data:
+  {{- range $path, $bytes := .Files.Glob "src/deps/*.py" }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: server-src-tools
+  namespace: mcpservers
+data:
+  {{- range $path, $bytes := .Files.Glob "src/tools/*.py" }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+  {{- end }}
