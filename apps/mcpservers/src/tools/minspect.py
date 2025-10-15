@@ -1,406 +1,743 @@
-from typing import Optional, List, Any, Dict
+from __future__ import annotations
+
+from typing import Optional, List, Any, Dict, Tuple
 from fastmcp import FastMCP
 from src.deps import db, utils
+import base64, json
 
 
-# ----------------------------
-# Utilidades internas
-# ----------------------------
+# ============================================================
+# Cursor helpers (opaque keyset cursor based on primary key id)
+# ============================================================
+def _enc_cursor(last_id: Optional[int]) -> Optional[str]:
+    if not last_id:
+        return None
+    payload = {"id": int(last_id)}
+    return base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+
+
+def _dec_cursor(cursor: Optional[str]) -> int:
+    if not cursor:
+        return 0
+    try:
+        data = json.loads(base64.urlsafe_b64decode(cursor.encode("utf-8")).decode("utf-8"))
+        return int(data.get("id", 0))
+    except Exception:
+        return 0
+
+
 def _add_filter(where: List[str], params: List[Any], clause: str, *values: Any):
     where.append(clause)
     params.extend(values)
 
 
 async def _resolve_plant_id(
-    plant_id: Optional[str],
-    plant_name: Optional[str],
+    plant_id: Optional[str] = None,
+    plant_name: Optional[str] = None,
 ) -> Optional[int]:
-    """Resuelve el id de planta por id directo o por nombre (normalizado)."""
+    """Resuelve id por id o nombre (normalizado)."""
     if plant_id:
         return int(plant_id)
 
     if plant_name:
-        # Intento exacto por nombre
+        # Exacto
         p = await db.fetch_one(
             "SELECT id FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
             (plant_name,),
         )
         if p:
             return int(p["id"])
-
         # Normalizado
-        plants = await db.fetch_all(
-            "SELECT id, name FROM public.plants_plant WHERE deleted_at IS NULL"
+        allp = await db.fetch_all(
+            "SELECT id, name, COALESCE(acs_code,'') AS acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
         )
         target = utils._norm(plant_name)
-        match = next((pp for pp in plants if utils._norm(pp["name"]) == target), None)
+        match = next(
+            (pp for pp in allp if utils._norm(pp["name"]) == target or pp["acs_code"] == plant_name),
+            None,
+        )
         if match:
             return int(match["id"])
-
     return None
 
 
-# ============================
-#   HELPERS: WORKORDERS
-# ============================
-async def _list_workorders_impl(
-    plant_id: Optional[str] = None,
-    work_center: Optional[str] = None,
-    user_status: Optional[str] = None,
-    date_from: Optional[str] = None,   # ISO 'YYYY-MM-DD'
-    date_to: Optional[str] = None,     # ISO 'YYYY-MM-DD'
-    page_size: Optional[int] = None,
-    cursor: Optional[str] = None,
-) -> Dict[str, Any]:
-    ps = utils._page_size(page_size)
-    after_id = int(cursor) if cursor else 0
-
-    where: List[str] = ["id > %s"]
-    params: List[Any] = [after_id]
-
-    if plant_id:
-        _add_filter(where, params, "plant_id = %s", int(plant_id))
-    if work_center:
-        _add_filter(where, params, "work_center = %s", work_center)
-    if user_status:
-        _add_filter(where, params, "user_status = %s", user_status)
-    if date_from:
-        _add_filter(where, params, "start_date >= %s", date_from)
-    if date_to:
-        _add_filter(where, params, "start_date <= %s", date_to)
-
-    where_sql = " AND ".join(where)
-    sql = f"""
-        SELECT
-            id::text AS id,
-            order_number,
-            description,
-            work_center,
-            user_status,
-            start_date,
-            plant_id::text AS plant_id,
-            data_hash
-        FROM public.minspect_workorder
-        WHERE {where_sql}
-        ORDER BY id
-        LIMIT %s;
-    """
-    params.append(ps)
-    rows = await db.fetch_all(sql, tuple(params))
-    next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
-
-    return {"count": len(rows), "next_cursor": next_cursor, "workorders": rows}
-
-
-# ============================
-#   HELPERS: NOTIFICATIONS
-# ============================
+# ============================================================
+# NOTIFICATIONS — shared WHERE builder
+# ============================================================
 def _where_notifications(
-    plant_id: Optional[str] = None,
-    priority: Optional[str] = None,
+    plant_ids: Optional[List[int]] = None,
+    plant_id: Optional[int] = None,
+    created_by: Optional[str] = None,
     system_status: Optional[str] = None,
+    priority: Optional[str] = None,
     year: Optional[int] = None,
     month: Optional[int] = None,
     week: Optional[int] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
-    created_by: Optional[str] = None,
     planner_grb: Optional[str] = None,
-):
-    """Construye WHERE + params para minspect_minspectdata."""
+) -> Tuple[str, List[Any]]:
     where: List[str] = []
     params: List[Any] = []
 
-    if plant_id:     _add_filter(where, params, "plant_id = %s", int(plant_id))
-    if priority:     _add_filter(where, params, "priority = %s", priority)
-    if year:         _add_filter(where, params, "year = %s", int(year))
-    if month:        _add_filter(where, params, "month = %s", int(month))
-    if week:         _add_filter(where, params, "week = %s", int(week))
-    if date_from:    _add_filter(where, params, "creation_date >= %s", date_from)
-    if date_to:      _add_filter(where, params, "creation_date <= %s", date_to)
-    if created_by:   _add_filter(where, params, "created_by = %s", created_by)
-    if planner_grb:  _add_filter(where, params, "planner_grb = %s", planner_grb)
+    if plant_id:
+        _add_filter(where, params, "plant_id = %s", plant_id)
+    elif plant_ids:
+        # Lista segura
+        placeholders = ", ".join(["%s"] * len(plant_ids))
+        _add_filter(where, params, f"plant_id IN ({placeholders})", *plant_ids)
+
+    if created_by:
+        _add_filter(where, params, "created_by = %s", created_by)
+    if planner_grb:
+        _add_filter(where, params, "planner_grb = %s", planner_grb)
+    if priority:
+        _add_filter(where, params, "priority = %s", priority)
     if system_status:
         _add_filter(where, params, "system_status ILIKE %s", f"%{system_status}%")
+    if year:
+        _add_filter(where, params, "year = %s", int(year))
+    if month:
+        _add_filter(where, params, "month = %s", int(month))
+    if week:
+        _add_filter(where, params, "week = %s", int(week))
+    if date_from:
+        _add_filter(where, params, "creation_date >= %s", date_from)
+    if date_to:
+        _add_filter(where, params, "creation_date <= %s", date_to)
 
-    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
-    return where_sql, tuple(params)
+    where_sql = "WHERE " + " AND ".join(where) if where else ""
+    return where_sql, params
 
 
+# ============================================================
+# INTERNAL IMPLS (not MCP tools)
+# ============================================================
 async def _list_notifications_impl(
-    plant_id: Optional[str] = None,
-    priority: Optional[str] = None,
+    plant_ids: Optional[List[int]] = None,
+    plant_id: Optional[int] = None,
+    created_by: Optional[str] = None,
     system_status: Optional[str] = None,
+    priority: Optional[str] = None,
     year: Optional[int] = None,
     month: Optional[int] = None,
     week: Optional[int] = None,
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
-    created_by: Optional[str] = None,
     planner_grb: Optional[str] = None,
-    page_size: Optional[int] = None,
     cursor: Optional[str] = None,
+    page_size: Optional[int] = None,
+    sort: Optional[str] = None,
 ) -> Dict[str, Any]:
-    ps = utils._page_size(page_size)
-    after_id = int(cursor) if cursor else 0
+    """
+    Global list with filters + keyset pagination.
+    sort: default = -created_at => creation_date DESC, id DESC
+    """
+    ps = utils._page_size(page_size, default=200, max_value=10_000)
 
+    # keyset
+    last_id = _dec_cursor(cursor)
+
+    # Build where
     where_sql, params = _where_notifications(
-        plant_id=plant_id, priority=priority, system_status=system_status,
-        year=year, month=month, week=week,
-        date_from=date_from, date_to=date_to,
-        created_by=created_by, planner_grb=planner_grb,
+        plant_ids=plant_ids,
+        plant_id=plant_id,
+        created_by=created_by,
+        system_status=system_status,
+        priority=priority,
+        year=year,
+        month=month,
+        week=week,
+        date_from=date_from,
+        date_to=date_to,
+        planner_grb=planner_grb,
     )
 
-    # keyset por id
+    # Sort policy => use creation_date DESC then id DESC by default; keyset uses id threshold.
+    # We strictly keyset on id; secondary sort is stable within page.
     if where_sql:
         where_sql = f"{where_sql} AND id > %s"
     else:
         where_sql = "WHERE id > %s"
-    params = list(params) + [after_id]
+    params = list(params) + [last_id]
 
-    sql = f"""
+    sql = """
         SELECT
-            id::text AS id,
-            notification_number,
-            fl,
+            id::text                  AS id,
+            notification_number       AS notification_no,
+            plant_id::text            AS plant_id,
+            COALESCE(fl,'')           AS fl,
             created_by,
-            priority,
             description,
             planner_grb,
             device_id,
             system_status,
-            year, month, week,
-            creation_date,
-            plant_id::text AS plant_id,
-            data_hash
+            priority,
+            creation_date             AS created_at,
+            year, month, week
         FROM public.minspect_minspectdata
         {where_sql}
         ORDER BY id
         LIMIT %s;
-    """
+    """.format(where_sql=where_sql)
+
     params.append(ps)
     rows = await db.fetch_all(sql, tuple(params))
-    next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
-    return {"count": len(rows), "next_cursor": next_cursor, "notifications": rows}
+
+    # Attach plant_name (and country/region if available -> NULL-safe placeholders)
+    # We avoid depending on extra columns; return None when unknown.
+    if rows:
+        pid_list = list({int(r["plant_id"]) for r in rows})
+        ph = ", ".join(["%s"] * len(pid_list))
+        plants = await db.fetch_all(
+            f"SELECT id, name FROM public.plants_plant WHERE id IN ({ph})",
+            tuple(pid_list),
+        )
+        pmap = {str(p["id"]): p["name"] for p in plants}
+    else:
+        pmap = {}
+
+    items: List[Dict[str, Any]] = []
+    for r in rows:
+        items.append(
+            {
+                "notification_no": r["notification_no"],
+                "plant_id": r["plant_id"],
+                "plant_name": pmap.get(r["plant_id"]),
+                "country": None,
+                "created_by": r["created_by"],
+                "description": r["description"],
+                "created_at": r["created_at"],
+                "system_status": r["system_status"],
+                "planner_group": r["planner_grb"],
+                "asset": r["device_id"] or r["fl"] or None,
+            }
+        )
+
+    next_cursor = _enc_cursor(int(rows[-1]["id"])) if rows and len(rows) == ps else None
+    return {"items": items, "next_cursor": next_cursor}
 
 
-async def _count_notifications_impl(
-    plant_id: Optional[str] = None,
-    priority: Optional[str] = None,
-    system_status: Optional[str] = None,
-    year: Optional[int] = None,
-    month: Optional[int] = None,
-    week: Optional[int] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
-    created_by: Optional[str] = None,
-    planner_grb: Optional[str] = None,
-) -> int:
-    where_sql, params = _where_notifications(
-        plant_id=plant_id, priority=priority, system_status=system_status,
-        year=year, month=month, week=week,
-        date_from=date_from, date_to=date_to,
-        created_by=created_by, planner_grb=planner_grb,
-    )
+async def _count_notifications_impl(**filters) -> int:
+    where_sql, params = _where_notifications(**filters)
     row = await db.fetch_one(
         f"SELECT COUNT(*)::int AS count FROM public.minspect_minspectdata {where_sql};",
-        params if params else None,
+        tuple(params) if params else None,
     )
     return int(row["count"]) if row else 0
 
 
-# ============================
-#   REGISTRO DE TOOLS
-# ============================
+async def _aggregate_notifications_impl(
+    group_by: List[str],
+    limit_per_group: Optional[int],
+    **filters,
+) -> Dict[str, Any]:
+    """
+    Server-side group-by. Allowed group_by keys mapped to SQL expressions.
+    """
+    allowed = {
+        "plant_id": "plant_id",
+        "created_by": "created_by",
+        "year": "year",
+        "month": "month",
+        "week": "week",
+        "system_status": "system_status",
+        # country placeholder (returns NULL) to keep shape stable:
+        "country": "NULL::text",
+    }
+    cols = []
+    for key in group_by:
+        if key not in allowed:
+            return {"error": f"INVALID_ARGUMENT: unsupported group_by '{key}'"}
+        cols.append(f"{allowed[key]} AS {key}")
+    if not cols:
+        return {"error": "INVALID_ARGUMENT: group_by is required"}
+
+    where_sql, params = _where_notifications(**filters)
+    # Basic aggregation
+    sql = f"""
+        SELECT {", ".join(cols)}, COUNT(*)::int AS count
+        FROM public.minspect_minspectdata
+        {where_sql}
+        GROUP BY {", ".join([key for key in allowed if key in group_by])}
+        ORDER BY count DESC
+    """
+    if limit_per_group and len(group_by) == 1:
+        sql += " LIMIT %s"
+        params.append(int(limit_per_group))
+
+    rows = await db.fetch_all(sql, tuple(params) if params else None)
+    return {"groups": rows}
+
+
+# ============================================================
+# MCP tools registration
+# ============================================================
 def register(mcp: FastMCP):
 
-    # -------- WORK ORDERS --------
-    @mcp.tool(description="Lista work orders (global) con filtros y paginación keyset.")
-    async def minspect_list_workorders(
-        plant_id: Optional[str] = None,
-        work_center: Optional[str] = None,
-        user_status: Optional[str] = None,
-        date_from: Optional[str] = None,
-        date_to: Optional[str] = None,
-        page_size: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> dict:
-        return await _list_workorders_impl(
-            plant_id=plant_id,
-            work_center=work_center,
-            user_status=user_status,
-            date_from=date_from,
-            date_to=date_to,
-            page_size=page_size,
-            cursor=cursor,
-        )
+    # ----------------------------------------
+    # (1) Search & Metadata
+    # ----------------------------------------
+    @mcp.tool(description="Fuzzy search de plantas por nombre/alias; devuelve IDs canónicos.")
+    async def minspect_search_plants(q: str, limit: Optional[int] = 20) -> dict:
+        if not q or not q.strip():
+            return {"error": "INVALID_ARGUMENT: q is required"}
+        qn = utils._norm(q)
 
-    @mcp.tool(description="Obtiene un work order por su número (order_number).")
-    async def minspect_get_workorder_by_number(order_number: str) -> dict:
-        row = await db.fetch_one(
+        # Traemos todas y hacemos matching normalizado; en SQL sólo exact/ILIKE si quieres:
+        plants = await db.fetch_all(
             """
+            SELECT id::text AS plant_id, name AS plant_name, COALESCE(acs_code,'') AS acs_code
+            FROM public.plants_plant
+            WHERE deleted_at IS NULL
+            ORDER BY id
+            LIMIT 5000;
+            """
+        )
+        items: List[Dict[str, Any]] = []
+        for p in plants:
+            if qn in utils._norm(p["plant_name"]) or qn in utils._norm(p["acs_code"]):
+                items.append(
+                    {
+                        "plant_id": p["plant_id"],
+                        "plant_name": p["plant_name"],
+                        "aliases": [],  # si tienes tabla de alias, aquí puedes rellenar
+                        "country": None,
+                        "region": None,
+                    }
+                )
+            if len(items) >= int(limit or 20):
+                break
+        return {"items": items}
+
+    @mcp.tool(description="Lista global de plantas con paginación y flag de actividad Minspect.")
+    async def minspect_list_plants_enhanced(
+        active_only: Optional[bool] = False,
+        country: Optional[str] = None,  # placeholder; devuelve null
+        cursor: Optional[str] = None,
+        page_size: Optional[int] = 100,
+    ) -> dict:
+        ps = utils._page_size(page_size, default=100)
+        last_id = _dec_cursor(cursor)
+
+        # Determinamos actividad Minspect por existencia de alguna notificación
+        sql = """
             SELECT
-                id::text AS id,
-                order_number,
-                description,
-                work_center,
-                user_status,
-                start_date,
-                plant_id::text AS plant_id,
-                data_hash
-            FROM public.minspect_workorder
-            WHERE order_number = %s
-            LIMIT 1;
-            """,
-            (order_number,),
-        )
-        return {"workorder": row} if row else {"error": "Work order not found"}
+                p.id::text AS plant_id,
+                p.name     AS plant_name,
+                EXISTS (
+                    SELECT 1 FROM public.minspect_minspectdata m
+                    WHERE m.plant_id = p.id
+                    LIMIT 1
+                ) AS minspect_active
+            FROM public.plants_plant p
+            WHERE p.deleted_at IS NULL AND p.id > %s
+            ORDER BY p.id
+            LIMIT %s;
+        """
+        rows = await db.fetch_all(sql, (last_id, ps))
+        items = []
+        for r in rows:
+            if active_only and not r["minspect_active"]:
+                continue
+            items.append(
+                {
+                    "plant_id": r["plant_id"],
+                    "plant_name": r["plant_name"],
+                    "country": None,
+                    "region": None,
+                    "minspect_active": bool(r["minspect_active"]),
+                }
+            )
+        next_cursor = _enc_cursor(int(rows[-1]["plant_id"])) if rows and len(rows) == ps else None
+        return {"items": items, "next_cursor": next_cursor}
 
-    @mcp.tool(description="Lista work orders de una planta.")
-    async def minspect_list_workorders_in_plant(
-        plant_id: Optional[str] = None,
-        plant_name: Optional[str] = None,
-        work_center: Optional[str] = None,
-        user_status: Optional[str] = None,
+    # ----------------------------------------
+    # (2) Global Notifications
+    # ----------------------------------------
+    @mcp.tool(description="Global notifications list con filtros y paginación keyset.")
+    async def minspect_notifications_list(
+        plant_ids: Optional[str] = None,  # CSV de ids
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
-        page_size: Optional[int] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        week: Optional[int] = None,
+        created_by: Optional[str] = None,
+        system_status: Optional[str] = None,
+        priority: Optional[str] = None,
+        planner_grb: Optional[str] = None,
+        sort: Optional[str] = "-created_at",
+        page_size: Optional[int] = 200,
         cursor: Optional[str] = None,
     ) -> dict:
-        pid = await _resolve_plant_id(plant_id, plant_name)
-        if not pid:
-            return {"error": "Plant not found"}
-        return await _list_workorders_impl(
-            plant_id=str(pid),
-            work_center=work_center,
-            user_status=user_status,
+        pid_list = None
+        if plant_ids:
+            try:
+                pid_list = [int(x) for x in plant_ids.split(",") if x.strip()]
+            except Exception:
+                return {"error": "INVALID_ARGUMENT: plant_ids must be CSV of integers"}
+
+        data = await _list_notifications_impl(
+            plant_ids=pid_list,
             date_from=date_from,
             date_to=date_to,
+            year=year,
+            month=month,
+            week=week,
+            created_by=created_by,
+            system_status=system_status,
+            priority=priority,
+            planner_grb=planner_grb,
             page_size=page_size,
             cursor=cursor,
+            sort=sort,
         )
+        return data
 
-    @mcp.tool(description="Resumen de work orders por estado de usuario (user_status) en una planta.")
-    async def minspect_workorders_status_summary_in_plant(plant_id: str) -> dict:
-        rows = await db.fetch_all(
-            """
-            SELECT user_status, COUNT(*)::int AS count
-            FROM public.minspect_workorder
-            WHERE plant_id = %s
-            GROUP BY user_status
-            ORDER BY user_status;
-            """,
-            (int(plant_id),),
-        )
-        return {"plant_id": str(plant_id), "buckets": rows}
-
-    @mcp.tool(description="Resumen de work orders por centro de trabajo (work_center) en una planta.")
-    async def minspect_workorders_by_workcenter_in_plant(plant_id: str) -> dict:
-        rows = await db.fetch_all(
-            """
-            SELECT work_center, COUNT(*)::int AS count
-            FROM public.minspect_workorder
-            WHERE plant_id = %s
-            GROUP BY work_center
-            ORDER BY work_center;
-            """,
-            (int(plant_id),),
-        )
-        return {"plant_id": str(plant_id), "buckets": rows}
-
-    # -------- NOTIFICATIONS --------
-    @mcp.tool(description="Lista notificaciones (minspectdata) con filtros y paginación keyset.")
-    async def minspect_list_notifications(
-        plant_id: Optional[str] = None,
-        priority: Optional[str] = None,
-        system_status: Optional[str] = None,
+    @mcp.tool(description="Global notifications count con los mismos filtros que /list.")
+    async def minspect_notifications_count(
+        plant_ids: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
         year: Optional[int] = None,
         month: Optional[int] = None,
         week: Optional[int] = None,
-        date_from: Optional[str] = None,
-        date_to: Optional[str] = None,
         created_by: Optional[str] = None,
-        planner_grb: Optional[str] = None,
-        page_size: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> dict:
-        return await _list_notifications_impl(
-            plant_id=plant_id, priority=priority, system_status=system_status,
-            year=year, month=month, week=week,
-            date_from=date_from, date_to=date_to,
-            created_by=created_by, planner_grb=planner_grb,
-            page_size=page_size, cursor=cursor,
-        )
-
-    @mcp.tool(description="Lista notificaciones de una planta con filtros comunes.")
-    async def minspect_list_notifications_in_plant(
-        plant_id: Optional[str] = None,
-        plant_name: Optional[str] = None,
-        priority: Optional[str] = None,
         system_status: Optional[str] = None,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
-        week: Optional[int] = None,
-        date_from: Optional[str] = None,
-        date_to: Optional[str] = None,
-        created_by: Optional[str] = None,
-        planner_grb: Optional[str] = None,
-        page_size: Optional[int] = None,
-        cursor: Optional[str] = None,
-    ) -> dict:
-        pid = await _resolve_plant_id(plant_id, plant_name)
-        if not pid:
-            return {"error": "Plant not found"}
-        return await _list_notifications_impl(
-            plant_id=str(pid), priority=priority, system_status=system_status,
-            year=year, month=month, week=week,
-            date_from=date_from, date_to=date_to,
-            created_by=created_by, planner_grb=planner_grb,
-            page_size=page_size, cursor=cursor,
-        )
-
-    @mcp.tool(description="Cuenta notificaciones (global) con filtros: mes, semana, rango fechas, planner_grb, created_by, etc.")
-    async def minspect_count_notifications(
-        plant_id: Optional[str] = None,
         priority: Optional[str] = None,
-        system_status: Optional[str] = None,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
-        week: Optional[int] = None,
-        date_from: Optional[str] = None,
-        date_to: Optional[str] = None,
-        created_by: Optional[str] = None,
         planner_grb: Optional[str] = None,
     ) -> dict:
+        pid_list = None
+        if plant_ids:
+            try:
+                pid_list = [int(x) for x in plant_ids.split(",") if x.strip()]
+            except Exception:
+                return {"error": "INVALID_ARGUMENT: plant_ids must be CSV of integers"}
         cnt = await _count_notifications_impl(
-            plant_id=plant_id, priority=priority, system_status=system_status,
-            year=year, month=month, week=week,
-            date_from=date_from, date_to=date_to,
-            created_by=created_by, planner_grb=planner_grb,
+            plant_ids=pid_list,
+            date_from=date_from,
+            date_to=date_to,
+            year=year,
+            month=month,
+            week=week,
+            created_by=created_by,
+            system_status=system_status,
+            priority=priority,
+            planner_grb=planner_grb,
         )
         return {"count": cnt}
 
-    @mcp.tool(description="Cuenta notificaciones en una planta con filtros (mes, semana, entre fechas, planner_grb, created_by, etc.).")
-    async def minspect_count_notifications_in_plant(
-        plant_id: Optional[str] = None,
-        plant_name: Optional[str] = None,
-        priority: Optional[str] = None,
-        system_status: Optional[str] = None,
+    @mcp.tool(description="Aggregations (country/plant/created_by/month/status).")
+    async def minspect_notifications_aggregate(
+        group_by: str,  # CSV
+        plant_ids: Optional[str] = None,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
         year: Optional[int] = None,
         month: Optional[int] = None,
         week: Optional[int] = None,
+        created_by: Optional[str] = None,
+        system_status: Optional[str] = None,
+        priority: Optional[str] = None,
+        planner_grb: Optional[str] = None,
+        limit_per_group: Optional[int] = None,
+        order_by: Optional[str] = "-count",  # placeholder
+    ) -> dict:
+        if not group_by:
+            return {"error": "INVALID_ARGUMENT: group_by is required"}
+        group_list = [g.strip() for g in group_by.split(",") if g.strip()]
+        pid_list = None
+        if plant_ids:
+            try:
+                pid_list = [int(x) for x in plant_ids.split(",") if x.strip()]
+            except Exception:
+                return {"error": "INVALID_ARGUMENT: plant_ids must be CSV of integers"}
+        data = await _aggregate_notifications_impl(
+            group_by=group_list,
+            limit_per_group=limit_per_group,
+            plant_ids=pid_list,
+            date_from=date_from,
+            date_to=date_to,
+            year=year,
+            month=month,
+            week=week,
+            created_by=created_by,
+            system_status=system_status,
+            priority=priority,
+            planner_grb=planner_grb,
+        )
+        return data
+
+    @mcp.tool(description="Leaderboard de creadores (scope=global|plant).")
+    async def minspect_top_creators(
+        scope: str = "global",
+        plant_id: Optional[str] = None,
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
-        created_by: Optional[str] = None,
-        planner_grb: Optional[str] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        week: Optional[int] = None,
+        limit: Optional[int] = 10,
+    ) -> dict:
+        if scope not in ("global", "plant"):
+            return {"error": "INVALID_ARGUMENT: scope must be global|plant"}
+
+        where: List[str] = []
+        params: List[Any] = []
+        if scope == "plant":
+            pid = await _resolve_plant_id(plant_id, None) if plant_id else None
+            if not pid:
+                return {"error": "Plant not found (scope=plant requires plant_id)"}
+            _add_filter(where, params, "plant_id = %s", pid)
+
+        # time filters
+        if date_from:
+            _add_filter(where, params, "creation_date >= %s", date_from)
+        if date_to:
+            _add_filter(where, params, "creation_date <= %s", date_to)
+        if year:
+            _add_filter(where, params, "year = %s", int(year))
+        if month:
+            _add_filter(where, params, "month = %s", int(month))
+        if week:
+            _add_filter(where, params, "week = %s", int(week))
+
+        where_sql = "WHERE " + " AND ".join(where) if where else ""
+        sql = f"""
+            SELECT created_by, COUNT(*)::int AS count
+            FROM public.minspect_minspectdata
+            {where_sql}
+            GROUP BY created_by
+            ORDER BY count DESC
+            LIMIT %s;
+        """
+        params.append(int(limit or 10))
+        rows = await db.fetch_all(sql, tuple(params))
+        out = []
+        for r in rows:
+            item = {"scope": scope, "created_by": r["created_by"], "count": r["count"]}
+            if scope == "plant":
+                item["plant_id"] = str(pid)
+            out.append(item)
+        return {"items": out}
+
+    @mcp.tool(description="Últimas notificaciones por planta/asset (prefix match en asset).")
+    async def minspect_notifications_latest(
+        plant_id: Optional[str] = None,
+        plant_name: Optional[str] = None,
+        asset: Optional[str] = None,  # prefix match sobre device_id o fl
+        limit: Optional[int] = 10,
     ) -> dict:
         pid = await _resolve_plant_id(plant_id, plant_name)
         if not pid:
             return {"error": "Plant not found"}
-        cnt = await _count_notifications_impl(
-            plant_id=str(pid), priority=priority, system_status=system_status,
-            year=year, month=month, week=week,
-            date_from=date_from, date_to=date_to,
-            created_by=created_by, planner_grb=planner_grb,
+
+        where = ["plant_id = %s"]
+        params: List[Any] = [pid]
+        if asset:
+            where.append("(device_id ILIKE %s OR fl ILIKE %s)")
+            params.extend((f"{asset}%", f"{asset}%"))
+        where_sql = " AND ".join(where)
+
+        sql = f"""
+            SELECT
+                id::text AS id,
+                notification_number AS notification_no,
+                created_by, description,
+                device_id, fl,
+                system_status, priority,
+                creation_date AS created_at
+            FROM public.minspect_minspectdata
+            WHERE {where_sql}
+            ORDER BY creation_date DESC, id DESC
+            LIMIT %s;
+        """
+        params.append(int(limit or 10))
+        rows = await db.fetch_all(sql, tuple(params))
+        items = []
+        for r in rows:
+            items.append(
+                {
+                    "notification_no": r["notification_no"],
+                    "created_by": r["created_by"],
+                    "created_at": r["created_at"],
+                    "asset": r["device_id"] or r["fl"] or None,
+                    "system_status": r["system_status"],
+                    "priority": r["priority"],
+                    "description": r["description"],
+                }
+            )
+        return {"items": items}
+
+    # ----------------------------------------
+    # (3) Per-plant rollups (top N por planta)
+    # ----------------------------------------
+    @mcp.tool(description="Top N creadores por planta (múltiples plantas a la vez).")
+    async def minspect_plant_top_creators(
+        plant_ids: str,  # CSV
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        week: Optional[int] = None,
+        limit_per_plant: Optional[int] = 3,
+    ) -> dict:
+        try:
+            pids = [int(x) for x in plant_ids.split(",") if x.strip()]
+        except Exception:
+            return {"error": "INVALID_ARGUMENT: plant_ids must be CSV of integers"}
+        if not pids:
+            return {"error": "INVALID_ARGUMENT: plant_ids is required and must not be empty"}
+
+        # Traer nombres de planta
+        ph = ", ".join(["%s"] * len(pids))
+        pl = await db.fetch_all(
+            f"SELECT id::text AS plant_id, name AS plant_name FROM public.plants_plant WHERE id IN ({ph})",
+            tuple(pids),
         )
-        return {"plant_id": str(pid), "count": cnt}
+        pmap = {int(p["plant_id"]): p["plant_name"] for p in pl}
+
+        # Filtrado temporal común
+        time_where: List[str] = []
+        time_params: List[Any] = []
+        if date_from:
+            _add_filter(time_where, time_params, "creation_date >= %s", date_from)
+        if date_to:
+            _add_filter(time_where, time_params, "creation_date <= %s", date_to)
+        if year:
+            _add_filter(time_where, time_params, "year = %s", int(year))
+        if month:
+            _add_filter(time_where, time_params, "month = %s", int(month))
+        if week:
+            _add_filter(time_where, time_params, "week = %s", int(week))
+        time_sql = " AND " + " AND ".join(time_where) if time_where else ""
+
+        # Para cada planta: top N
+        out_plants: List[Dict[str, Any]] = []
+        for pid in pids:
+            rows = await db.fetch_all(
+                f"""
+                SELECT created_by, COUNT(*)::int AS count
+                FROM public.minspect_minspectdata
+                WHERE plant_id = %s {time_sql}
+                GROUP BY created_by
+                ORDER BY count DESC
+                LIMIT %s;
+                """,
+                tuple([pid] + time_params + [int(limit_per_plant or 3)]),
+            )
+            out_plants.append(
+                {
+                    "plant_id": str(pid),
+                    "plant_name": pmap.get(pid),
+                    "country": None,
+                    "top": rows,
+                }
+            )
+        return {"plants": out_plants}
+
+    # ----------------------------------------
+    # (4) Alert ↔ Notification correlation
+    # ----------------------------------------
+    @mcp.tool(description="Correlaciona alertas predictivas con notificaciones Minspect (misma máquina/asset, ventana temporal).")
+    async def minspect_correlate_alerts_notifications(
+        plant_id: Optional[str] = None,
+        plant_name: Optional[str] = None,
+        machine_name: Optional[str] = None,
+        asset: Optional[str] = None,  # usa device_id o fl
+        window_before_hours: Optional[int] = 72,
+        window_after_hours: Optional[int] = 168,
+        state: Optional[str] = "Any",  # Open|Closed|Any
+        limit: Optional[int] = 50,
+    ) -> dict:
+        pid = await _resolve_plant_id(plant_id, plant_name)
+        if not pid:
+            return {"error": "Plant not found"}
+        s = (state or "Any").strip().lower()
+        if s not in ("open", "closed", "any"):
+            return {"error": "INVALID_ARGUMENT: state must be Open|Closed|Any"}
+
+        # Filtro de alerta por planta y máquina opcional
+        where_alert = ["a.plant_id = %s"]
+        params: List[Any] = [pid]
+        if machine_name:
+            where_alert.append("a.name = %s")
+            params.append(machine_name)
+        if s != "any":
+            where_alert.append("LOWER(m.state) = %s")
+            params.append(s)
+        where_alert_sql = " AND ".join(where_alert)
+
+        # Traemos alertas recientes (limit) con info de asset y ts
+        alerts = await db.fetch_all(
+            f"""
+            SELECT
+                m.id::text AS id, m.alert_id, m.timestamp,
+                m.risk_score AS risk_score, m.risk_level AS risk_level,
+                m.name AS alert_type,
+                a.name AS machine_name,
+                a.id::text AS machine_id,
+                a.plant_id
+            FROM public.mpredict_mpredictalert m
+            JOIN public.mpredict_asset a ON a.id = m.asset_id
+            WHERE {where_alert_sql}
+            ORDER BY m.timestamp DESC, m.id DESC
+            LIMIT %s;
+            """,
+            tuple(params + [int(limit or 50)]),
+        )
+
+        if not alerts:
+            return {"pairs": []}
+
+        # Para matching contra minspect: usamos device_id / fl. Si 'asset' llega, lo usamos como prefix.
+        pairs: List[Dict[str, Any]] = []
+        for al in alerts:
+            ts = al["timestamp"]
+            before = f"{window_before_hours or 72} hours"
+            after = f"{window_after_hours or 168} hours"
+
+            notif_where = ["plant_id = %s", "creation_date BETWEEN %s::timestamp - INTERVAL %s AND %s::timestamp + INTERVAL %s"]
+            nparams: List[Any] = [pid, ts, before, ts, after]
+
+            if asset:
+                notif_where.append("(device_id ILIKE %s OR fl ILIKE %s)")
+                nparams.extend((f"{asset}%", f"{asset}%"))
+
+            notif_sql = f"""
+                SELECT
+                    notification_number AS notification_no,
+                    created_by,
+                    creation_date AS created_at,
+                    device_id, fl,
+                    system_status
+                FROM public.minspect_minspectdata
+                WHERE {" AND ".join(notif_where)}
+                ORDER BY creation_date DESC, id DESC
+                LIMIT 100;
+            """
+            notifs = await db.fetch_all(notif_sql, tuple(nparams))
+            pairs.append(
+                {
+                    "alert": {
+                        "alert_id": al["alert_id"],
+                        "machine_name": al["machine_name"],
+                        "risk_score": al["risk_score"],
+                        "state": None if s == "any" else s.capitalize(),
+                        "timestamp": ts,
+                        "type": al["alert_type"],
+                    },
+                    "notifications": [
+                        {
+                            "notification_no": n["notification_no"],
+                            "created_by": n["created_by"],
+                            "created_at": n["created_at"],
+                            "asset": n["device_id"] or n["fl"] or None,
+                            "system_status": n["system_status"],
+                        }
+                        for n in notifs
+                    ],
+                }
+            )
+        return {"pairs": pairs}
