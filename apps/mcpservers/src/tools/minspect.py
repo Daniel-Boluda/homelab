@@ -234,35 +234,32 @@ async def _aggregate_notifications_impl(
 ) -> Dict[str, Any]:
     """
     Server-side group-by. Allowed group_by keys mapped to SQL expressions.
-    Supports 'plant' as alias for 'plant_id'.
     """
     allowed = {
         "plant_id": "plant_id",
-        "plant": "plant_id",  # alias accepted
         "created_by": "created_by",
         "year": "year",
         "month": "month",
         "week": "week",
         "system_status": "system_status",
+        # country placeholder (returns NULL) to keep shape stable:
         "country": "NULL::text",
     }
-
     cols = []
     for key in group_by:
         if key not in allowed:
             return {"error": f"INVALID_ARGUMENT: unsupported group_by '{key}'"}
         cols.append(f"{allowed[key]} AS {key}")
-
     if not cols:
         return {"error": "INVALID_ARGUMENT: group_by is required"}
 
     where_sql, params = _where_notifications(**filters)
-
+    # Basic aggregation
     sql = f"""
         SELECT {", ".join(cols)}, COUNT(*)::int AS count
         FROM public.minspect_minspectdata
         {where_sql}
-        GROUP BY {", ".join([allowed[k] for k in group_by])}
+        GROUP BY {", ".join([key for key in allowed if key in group_by])}
         ORDER BY count DESC
     """
     if limit_per_group and len(group_by) == 1:
@@ -270,20 +267,6 @@ async def _aggregate_notifications_impl(
         params.append(int(limit_per_group))
 
     rows = await db.fetch_all(sql, tuple(params) if params else None)
-
-    # Attach plant names if grouped by plant_id or plant
-    if any(k in ("plant_id", "plant") for k in group_by) and rows:
-        pid_list = list({int(r["plant"]) for r in rows if r.get("plant")})
-        if pid_list:
-            ph = ", ".join(["%s"] * len(pid_list))
-            plants = await db.fetch_all(
-                f"SELECT id, name FROM public.plants_plant WHERE id IN ({ph})",
-                tuple(pid_list),
-            )
-            pmap = {int(p["id"]): p["name"] for p in plants}
-            for r in rows:
-                if r.get("plant"):
-                    r["plant_name"] = pmap.get(int(r["plant"]))
     return {"groups": rows}
 
 
