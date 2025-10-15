@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from typing import Optional
-from ..deps import db , utils
+from src.deps import db , utils
 from fastmcp import FastMCP
 
 def register(mcp: FastMCP):

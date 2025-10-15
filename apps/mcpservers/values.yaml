@@ -24,7 +24,7 @@ app-template:
             BASE_URL: https://mcpservers.dbcloud.org
             ALLOWED_EMAILS: "daniel.boluda.fdez@gmail.com,serverdabol@gmail.com,mhussien.khalil@gmail.com,prabeshraj.joshi@holcim.com"
             GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/gcloud/application_default_credentials.json
-
+          workingDir: /app/src
           envFrom:
           - secretRef:
               name: mcpservers-secrets
@@ -98,7 +98,7 @@ app-template:
       type: configMap
       name: server-mcp-script
       globalMounts:
-        - path: /app/server.py
+        - path: /app/src/server.py
           subPath: server_script.py
           readOnly: true
     src-deps:
@@ -106,14 +106,14 @@ app-template:
       type: configMap
       name: server-src-deps
       globalMounts:
-        - path: /app/deps
+        - path: /app/src/deps
           readOnly: true
     src-tools:
       enabled: true
       type: configMap
       name: server-src-tools
       globalMounts:
-        - path: /app/tools
+        - path: /app/src/tools
           readOnly: true
 
     data:

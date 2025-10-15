@@ -26,8 +26,8 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.auth.providers.google import GoogleProvider
 from fastmcp.server.dependencies import get_access_token
-from tools import mpredict , tis, minspect
-from deps import utils
+from src.tools import mpredict, minspect
+from src.deps import utils
 
 from fastapi.responses import JSONResponse
 
