@@ -1,4 +1,4 @@
-FROM python:3.14-slim
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
@@ -15,7 +15,12 @@ RUN pip install --upgrade pip && \
         fastapi \
         cloud-sql-python-connector[pg8000] \
         anyio \
-        uvicorn
+        uvicorn \
+        google-cloud-bigquery \
+        google-cloud-bigquery-storage \
+        pandas \
+        pyarrow \
+        db-dtypes
 
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
