@@ -7,12 +7,14 @@ import re
 
 def register(mcp: FastMCP):
     """
-    Herramientas MCP para interactuar con BigQuery (tabla maestra de lognames/alias),
-    todo filtrado por PLANTA para evitar colisiones de lognames iguales en plantas distintas.
+    Herramientas MCP prefijadas con 'tis_' para interactuar con BigQuery (tabla maestra de lognames/alias),
+    filtradas por plant_name.
     """
 
     client = bigquery.Client(project="plants-of-tomorrow-poc")
     MASTER_TABLE = "`plants-of-tomorrow-poc.AXIOM.LOG_INDEX_MASTER_MCP_test`"
+    # Esquema de la tabla:
+    # logname, aliasname, description, unit, ri_class, log_class, plant_name, proposed_alias
 
     # -------------------------
     # Utilidades internas
@@ -23,17 +25,17 @@ def register(mcp: FastMCP):
         return df.to_dict(orient="records")
 
     async def _lookup_sensor_info(
-        plant_code: str,
+        plant_name: str,
         sensor_codes: List[str],
         *,
         logname_column: str = "logname",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         description_column: str = "description",
         aliasname_column: str = "aliasname",
         unit_column: str = "unit",
     ) -> Dict[str, Optional[str]]:
         """
-        Devuelve {logname: "description, aliasname, measured in unit"} o None (filtrado por planta).
+        Devuelve {logname: "description, aliasname, measured in unit"} o None (filtrado por plant_name).
         """
         result: Dict[str, Optional[str]] = {code: None for code in sensor_codes}
 
@@ -44,12 +46,12 @@ def register(mcp: FastMCP):
                 {aliasname_column} AS aliasname,
                 {unit_column} AS unit
             FROM {MASTER_TABLE}
-            WHERE {plant_column} = @plant_code
+            WHERE {plant_column} = @plant_name
               AND {logname_column} IN UNNEST(@lognames)
         """
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code),
+                bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name),
                 bigquery.ArrayQueryParameter("lognames", "STRING", sensor_codes),
             ]
         )
@@ -60,58 +62,43 @@ def register(mcp: FastMCP):
                 info = f"{row.get('description','N/A')}, {row.get('aliasname','N/A')}, measured in {row.get('unit','N/A')}"
                 result[str(row["logname"])] = info
         except Exception as e:
-            print(f"[lookup] BigQuery error: {e}")
+            print(f"[tis_lookup] BigQuery error: {e}")
 
         return result
 
     # -------------------------
-    # Tools
+    # MCP TOOLS (prefijo tis_)
     # -------------------------
 
-    @mcp.tool(description="""
-        Lista las plantas disponibles (códigos y, si existe, su nombre).
-        """)
-    async def list_plants(
-        plant_column: str = "plant_code",
-        plant_name_column: Optional[str] = "plant_name"
+    @mcp.tool(description="Lista las plantas disponibles (plant_name).")
+    async def tis_list_plants(
+        plant_column: str = "plant_name",
     ) -> List[Dict[str, Any]]:
-        if plant_name_column:
-            query = f"""
-                SELECT DISTINCT
-                    {plant_column} AS plant_code,
-                    {plant_name_column} AS plant_name
-                FROM {MASTER_TABLE}
-                WHERE {plant_column} IS NOT NULL
-                ORDER BY plant_code
-            """
-        else:
-            query = f"""
-                SELECT DISTINCT
-                    {plant_column} AS plant_code
-                FROM {MASTER_TABLE}
-                WHERE {plant_column} IS NOT NULL
-                ORDER BY plant_code
-            """
+        query = f"""
+            SELECT DISTINCT
+                {plant_column} AS plant_name
+            FROM {MASTER_TABLE}
+            WHERE {plant_column} IS NOT NULL
+            ORDER BY plant_name
+        """
         try:
             df = client.query(query).to_dataframe()
             return _df_to_records(df)
         except Exception as e:
             return [{"status": "FAILURE", "error": str(e)}]
 
-    @mcp.tool(description="""
-        Obtiene (por PLANTA) información de soporte (descripción, alias, unidad) para una lista de lognames.
-        """)
-    async def lookup_sensor_info_from_bq(
-        plant_code: str,
+    @mcp.tool(description="Obtiene (por PLANTA) información de soporte (descripción, alias, unidad) para una lista de lognames.")
+    async def tis_lookup_sensor_info(
+        plant_name: str,
         sensor_codes: List[str],
         logname_column: str = "logname",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         description_column: str = "description",
         aliasname_column: str = "aliasname",
         unit_column: str = "unit",
     ) -> Dict[str, Optional[str]]:
         return await _lookup_sensor_info(
-            plant_code,
+            plant_name,
             sensor_codes,
             logname_column=logname_column,
             plant_column=plant_column,
@@ -120,21 +107,18 @@ def register(mcp: FastMCP):
             unit_column=unit_column,
         )
 
-    @mcp.tool(description="""
-        Crea un bloque de instrucciones para que un LLM proponga alias legibles/consistentes
-        para lognames específicos de una PLANTA, usando el HAC (contexto externo) como guía.
-        """)
-    async def generate_log_alias(
-        plant_code: str,
+    @mcp.tool(description="Crea un bloque de instrucciones para que un LLM proponga alias legibles/consistentes por planta (HAC como contexto).")
+    async def tis_generate_log_alias(
+        plant_name: str,
         sensor_codes: List[str],
         logname_column: str = "logname",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         description_column: str = "description",
         aliasname_column: str = "aliasname",
         unit_column: str = "unit",
     ) -> str:
         result_dict = await _lookup_sensor_info(
-            plant_code,
+            plant_name,
             sensor_codes,
             logname_column=logname_column,
             plant_column=plant_column,
@@ -144,7 +128,7 @@ def register(mcp: FastMCP):
         )
 
         return f"""
-        The user is requesting new, user-friendly, and accurate aliases for sensors **{sensor_codes}** in plant **{plant_code}**.
+        The user is requesting new, user-friendly, and accurate aliases for sensors **{sensor_codes}** in plant **{plant_name}**.
 
         * Use the general naming guidelines available in the workspace (HAC manual context).
         * Combine those guidelines with the following supporting information per sensor:
@@ -153,36 +137,33 @@ def register(mcp: FastMCP):
         * Output the final result as a list of JSON objects, one per sensor, like:
 
         {{
-            "plant_code": "{plant_code}",
+            "plant_name": "{plant_name}",
             "sensor_code": "[SENSOR_CODE]",
             "sensor_alias": "[YOUR_DERIVED_ALIAS]"
         }}
         """
 
-    # ✅ UPDATE ESTRICTO: SIEMPRE por logname + plant_code (sin opciones creativas)
-    @mcp.tool(description="""
-        Actualiza (en una PLANTA) el campo 'proposed_alias' en la tabla maestra de BigQuery
-        para un 'logname' concreto. El filtro es SIEMPRE: plant_code = @plant_code AND logname = @logname.
-        """)
-    async def update_alias_information(
-        plant_code: str,
+    # ✅ UPDATE ESTRICTO: SIEMPRE por logname + plant_name (sin opciones creativas)
+    @mcp.tool(description="Actualiza 'proposed_alias' en BigQuery filtrando por logname + plant_name (modo estricto).")
+    async def tis_update_alias_information(
+        plant_name: str,
         logname: str,
         proposed_alias: str,
         *,
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         logname_column: str = "logname",
         proposed_alias_column: str = "proposed_alias",
     ) -> Dict[str, Any]:
         query = f"""
             UPDATE {MASTER_TABLE}
             SET {proposed_alias_column} = @proposed_alias
-            WHERE {plant_column} = @plant_code
+            WHERE {plant_column} = @plant_name
               AND {logname_column} = @logname
         """
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
                 bigquery.ScalarQueryParameter("proposed_alias", "STRING", proposed_alias),
-                bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code),
+                bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name),
                 bigquery.ScalarQueryParameter("logname", "STRING", logname),
             ]
         )
@@ -193,19 +174,16 @@ def register(mcp: FastMCP):
         except Exception as e:
             return {"status": "FAILURE", "error": str(e)}
 
-    @mcp.tool(description="""
-        Busca lognames/alias/description similares dentro de UNA PLANTA usando patrones (regex) provistos por el usuario.
-        No se hardcodea ningún sinónimo interno: pasa tus propios patrones.
-        """)
-    async def search_similar(
-        plant_code: str,
+    @mcp.tool(description="Busca lognames/alias/description similares en una PLANTA (regex personalizadas, sin hardcode).")
+    async def tis_search_similar(
+        plant_name: str,
         patterns: List[str],
         *,
         search_in: List[str] = ["logname", "aliasname", "description"],
         logname_column: str = "logname",
         aliasname_column: str = "aliasname",
         description_column: str = "description",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         limit: int = 200,
     ) -> List[Dict[str, Any]]:
         colmap = {
@@ -231,11 +209,11 @@ def register(mcp: FastMCP):
                 {aliasname_column} AS aliasname,
                 {description_column} AS description
             FROM {MASTER_TABLE}
-            WHERE {plant_column} = @plant_code
+            WHERE {plant_column} = @plant_name
               AND ({where_or})
             LIMIT {limit}
         """
-        params = [bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code)]
+        params = [bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name)]
         for col in target_cols:
             for i, pat in enumerate(patterns):
                 params.append(bigquery.ScalarQueryParameter(f"pat_{col}_{i}", "STRING", pat))
@@ -247,12 +225,9 @@ def register(mcp: FastMCP):
         except Exception as e:
             return [{"status": "FAILURE", "error": str(e)}]
 
-    @mcp.tool(description="""
-        Devuelve lognames/alias “parecidos” a un logname base dentro de UNA PLANTA.
-        Combina LIKE por tokens del logname base y (opcional) regex extra que aportes.
-        """)
-    async def similar_to_logname(
-        plant_code: str,
+    @mcp.tool(description="Devuelve lognames/alias “parecidos” a un logname base dentro de una PLANTA (tokens + regex opcional).")
+    async def tis_similar_to_logname(
+        plant_name: str,
         base_logname: str,
         *,
         extra_patterns: Optional[List[str]] = None,
@@ -260,7 +235,7 @@ def register(mcp: FastMCP):
         logname_column: str = "logname",
         aliasname_column: str = "aliasname",
         description_column: str = "description",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
         tokens = [t for t in re.split(r"[.\-:_+#/ ]+", base_logname) if t]
@@ -295,7 +270,7 @@ def register(mcp: FastMCP):
             return [{"status": "FAILURE", "error": "No hay tokens ni patrones para búsqueda"}]
 
         where_cond = " AND ".join([
-            f"{plant_column} = @plant_code",
+            f"{plant_column} = @plant_name",
             "(" + " OR ".join(clauses) + ")",
         ])
 
@@ -309,7 +284,7 @@ def register(mcp: FastMCP):
             LIMIT {limit}
         """
         params: List[bigquery.ScalarQueryParameter] = [
-            bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code)
+            bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name)
         ]
         for col in target_cols:
             for i, tok in enumerate(tokens):
@@ -326,14 +301,12 @@ def register(mcp: FastMCP):
         except Exception as e:
             return [{"status": "FAILURE", "error": str(e)}]
 
-    @mcp.tool(description="""
-        Consulta libre SOLO LECTURA en una PLANTA (selección de columnas y filtro extra opcional).
-        """)
-    async def query_by_plant(
-        plant_code: str,
+    @mcp.tool(description="Consulta libre (solo lectura) filtrando por plant_name, columnas personalizables.")
+    async def tis_query_by_plant(
+        plant_name: str,
         select_columns: List[str] = ["logname", "aliasname", "description", "unit"],
         *,
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         extra_where: Optional[str] = None,
         limit: int = 200
     ) -> List[Dict[str, Any]]:
@@ -341,14 +314,14 @@ def register(mcp: FastMCP):
         query = f"""
             SELECT {cols}
             FROM {MASTER_TABLE}
-            WHERE {plant_column} = @plant_code
+            WHERE {plant_column} = @plant_name
         """
         if extra_where:
             query += f" AND ({extra_where})"
         query += f" LIMIT {limit}"
 
         job_config = bigquery.QueryJobConfig(
-            query_parameters=[bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code)]
+            query_parameters=[bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name)]
         )
         try:
             df = client.query(query, job_config=job_config).to_dataframe()
@@ -356,32 +329,19 @@ def register(mcp: FastMCP):
         except Exception as e:
             return [{"status": "FAILURE", "error": str(e)}]
 
-    # -------------------------
-    # 🔎 Búsqueda guiada por contexto (HAC) — sin hardcode interno
-    # -------------------------
-    @mcp.tool(description="""
-        Búsqueda guiada por CONTEXTO (p. ej., términos extraídos del HAC) dentro de UNA PLANTA.
-        No hardcodea sinónimos: recibe desde fuera los términos/claves/patrones que quieras usar.
-        Construye un filtro combinando:
-          - Palabras clave de la consulta en modo LIKE (tokens)
-          - Patrones/regex aportados (context_terms, synonyms, extra_patterns)
-        """)
-    async def guided_search_by_context(
-        plant_code: str,
+    @mcp.tool(description="Búsqueda guiada por CONTEXTO (HAC u otros términos) dentro de una PLANTA (plant_name).")
+    async def tis_guided_search_by_context(
+        plant_name: str,
         natural_query: str,
         *,
-        # Términos que tú (o tu LLM) extraes del HAC/manual/etc. y pasas como regex
         context_terms: Optional[List[str]] = None,
-        # Diccionario de sinónimos opcional (clave -> lista de regex); lo aportas tú externamente
         synonyms: Optional[Dict[str, List[str]]] = None,
-        # Patrones adicionales (regex) si quieres añadir más
         extra_patterns: Optional[List[str]] = None,
-        # Dónde buscar
         search_in: List[str] = ["logname", "aliasname", "description"],
         logname_column: str = "logname",
         aliasname_column: str = "aliasname",
         description_column: str = "description",
-        plant_column: str = "plant_code",
+        plant_column: str = "plant_name",
         limit: int = 200
     ) -> List[Dict[str, Any]]:
         """
@@ -390,7 +350,6 @@ def register(mcp: FastMCP):
           2) Añadir REGEXP_CONTAINS para cada patrón de context_terms, synonyms y extra_patterns.
           3) Combinar todo con OR entre columnas objetivo.
         """
-        # 1) tokens por separadores comunes en lognames
         tokens = [t for t in re.split(r"[.\-:_+#/ ]+", natural_query) if t]
         tokens = tokens[:8]  # límite defensivo
 
@@ -403,13 +362,11 @@ def register(mcp: FastMCP):
         if not target_cols:
             return [{"status": "FAILURE", "error": "search_in vacío o inválido"}]
 
-        # 2) construir cláusulas
         likes = []
         for col in target_cols:
             for i, tok in enumerate(tokens):
                 likes.append(f"LOWER({col}) LIKE LOWER(@like_{col}_{i})")
 
-        # recopilar todos los patrones regex que el usuario/LLM aporte externamente
         regex_patterns: List[str] = []
         if context_terms:
             regex_patterns.extend(context_terms)
@@ -428,7 +385,7 @@ def register(mcp: FastMCP):
         if not likes and not regexes:
             return [{"status": "FAILURE", "error": "No hay tokens ni patrones para búsqueda"}]
 
-        where_parts = [f"{plant_column} = @plant_code"]
+        where_parts = [f"{plant_column} = @plant_name"]
         col_filters = []
         if likes:
             col_filters.append("(" + " OR ".join(likes) + ")")
@@ -447,13 +404,11 @@ def register(mcp: FastMCP):
         """
 
         params: List[bigquery.ScalarQueryParameter] = [
-            bigquery.ScalarQueryParameter("plant_code", "STRING", plant_code)
+            bigquery.ScalarQueryParameter("plant_name", "STRING", plant_name)
         ]
-        # LIKE params
         for col in target_cols:
             for i, tok in enumerate(tokens):
                 params.append(bigquery.ScalarQueryParameter(f"like_{col}_{i}", "STRING", f"%{tok}%"))
-        # REGEX params
         for col in target_cols:
             for i, pat in enumerate(regex_patterns):
                 params.append(bigquery.ScalarQueryParameter(f"re_{col}_{i}", "STRING", pat))
