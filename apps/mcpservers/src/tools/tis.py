@@ -134,6 +134,8 @@ def register(mcp: FastMCP):
         * Combine those guidelines with the following supporting information per sensor:
           {result_dict}
         * For each sensor, create a derived alias that is descriptive but short, using **underscore ('_') separators**.
+        * Ensure the derived alias has the same language found in the supporting information.
+        * Look at examples in the logname aliasname examples available in the workspace.
         * Output the final result as a list of JSON objects, one per sensor, like:
 
         {{
