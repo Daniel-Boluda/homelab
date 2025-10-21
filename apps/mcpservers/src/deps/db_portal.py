@@ -8,7 +8,7 @@ from google.cloud.sql.connector import Connector, IPTypes
 # -----------------------------------------------------------------------------
 # DB (Cloud SQL Connector + pg8000)
 # -----------------------------------------------------------------------------
-INSTANCE = os.environ.get("PORTAL_INSTANCE") or os.environ.get("INSTANCE_CONNECTION_NAME")
+INSTANCE = os.environ.get("PORTAL_INSTANCE") or os.environ.get("PORTAL_INSTANCE_CONNECTION_NAME")
 PGUSER   = os.environ.get("PORTAL_PGUSER")
 PGPASS   = os.environ.get("PORTAL_PGPASS")
 PGDB     = os.environ.get("PORTAL_PGDB")
