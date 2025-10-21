@@ -9,7 +9,7 @@ app-template:
         main:
           image:
             repository: n8nio/n8n
-            tag: 1.116.1
+            tag: 1.117.0
           env:
             TZ: Europe/Madrid
             DB_SQLITE_VACUUM_ON_STARTUP: true
