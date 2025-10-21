@@ -26,7 +26,7 @@ from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import Middleware, MiddlewareContext
 from fastmcp.server.auth.providers.google import GoogleProvider
 from fastmcp.server.dependencies import get_access_token
-from src.tools import mpredict, minspect, tis
+from src.tools import mpredict, minspect, tis, rca
 from src.deps import utils
 
 from fastapi.responses import JSONResponse
@@ -153,6 +153,7 @@ def create_server() -> FastMCP:
 
     mpredict.register(mcp)
     minspect.register(mcp)
+    rca.register(mcp)
     tis.register(mcp)
 
 

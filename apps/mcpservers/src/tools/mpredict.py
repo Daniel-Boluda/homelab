@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from typing import Optional
-from src.deps import db , utils
+from apps.mcpservers.src.deps import db_portal
+from src.deps import utils
 from fastmcp import FastMCP
 
 def register(mcp: FastMCP):
@@ -18,7 +19,7 @@ def register(mcp: FastMCP):
             ORDER BY id
             LIMIT %s;
         """
-        rows = await db.fetch_all(sql, (after_id, ps))
+        rows = await db_portal.fetch_all(sql, (after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"count": len(rows), "next_cursor": next_cursor, "plants": rows}
 
@@ -34,19 +35,19 @@ def register(mcp: FastMCP):
         # Resolver planta
         plant = None
         if plant_id:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND id = %s",
                 (int(plant_id),),
             )
         elif plant_name:
             # match exacto por nombre; puedes cambiar a ILIKE si quieres más laxo
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
                 (plant_name,),
             )
             if not plant:
                 # fallback: normalización en Python
-                candidates = await db.fetch_all(
+                candidates = await db_portal.fetch_all(
                     "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
                 )
                 target = utils._norm(plant_name)
@@ -67,7 +68,7 @@ def register(mcp: FastMCP):
                 ORDER BY id
                 LIMIT %s;
             """
-            rows = await db.fetch_all(sql, (pid, after_id, ps))
+            rows = await db_portal.fetch_all(sql, (pid, after_id, ps))
             next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
             return {
                 "plant": plant,
@@ -86,7 +87,7 @@ def register(mcp: FastMCP):
                 ORDER BY id
                 LIMIT %s;
             """
-            rows = await db.fetch_all(sql, (pid, after_id, ps))
+            rows = await db_portal.fetch_all(sql, (pid, after_id, ps))
             next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
             return {
                 "plant": plant,
@@ -122,7 +123,7 @@ def register(mcp: FastMCP):
             ORDER BY a.id
             LIMIT %s;
         """
-        rows = await db.fetch_all(sql, (pid, after_id, ps))
+        rows = await db_portal.fetch_all(sql, (pid, after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {
             "plant": plant,
@@ -145,17 +146,17 @@ def register(mcp: FastMCP):
         # Resolver planta
         plant = None
         if plant_id:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND id = %s",
                 (int(plant_id),),
             )
         elif plant_name:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
                 (plant_name,),
             )
             if not plant:
-                candidates = await db.fetch_all(
+                candidates = await db_portal.fetch_all(
                     "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
                 )
                 target = utils._norm(plant_name)
@@ -219,7 +220,7 @@ def register(mcp: FastMCP):
                 ORDER BY a.id
                 LIMIT %s;
             """
-        rows = await db.fetch_all(sql, (pid, after_id, ps))
+        rows = await db_portal.fetch_all(sql, (pid, after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {
             "plant": plant,
@@ -241,17 +242,17 @@ def register(mcp: FastMCP):
         # Resolver planta
         plant = None
         if plant_id:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND id = %s",
                 (int(plant_id),),
             )
         elif plant_name:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
                 (plant_name,),
             )
             if not plant:
-                candidates = await db.fetch_all(
+                candidates = await db_portal.fetch_all(
                     "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
                 )
                 target = utils._norm(plant_name)
@@ -306,7 +307,7 @@ def register(mcp: FastMCP):
                 ORDER BY a.id
                 LIMIT %s;
             """
-        rows = await db.fetch_all(sql, (pid, after_id, ps))
+        rows = await db_portal.fetch_all(sql, (pid, after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {
             "plant": plant,
@@ -369,7 +370,7 @@ def register(mcp: FastMCP):
                 ORDER BY a.id
                 LIMIT %s;
             """
-        rows = await db.fetch_all(sql, (after_id, ps))
+        rows = await db_portal.fetch_all(sql, (after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
@@ -434,7 +435,7 @@ def register(mcp: FastMCP):
                 ORDER BY a.id
                 LIMIT %s;
             """
-        rows = await db.fetch_all(sql, (after_id, ps))
+        rows = await db_portal.fetch_all(sql, (after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
@@ -491,7 +492,7 @@ def register(mcp: FastMCP):
                 ORDER BY a.id
                 LIMIT %s;
             """
-        rows = await db.fetch_all(sql, (after_id, ps))
+        rows = await db_portal.fetch_all(sql, (after_id, ps))
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
@@ -513,17 +514,17 @@ def register(mcp: FastMCP):
         # Resolver planta
         plant = None
         if plant_id:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND id = %s",
                 (int(plant_id),),
             )
         elif plant_name:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
                 (plant_name,),
             )
             if not plant:
-                candidates = await db.fetch_all(
+                candidates = await db_portal.fetch_all(
                     "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
                 )
                 target = utils._norm(plant_name)
@@ -564,7 +565,7 @@ def register(mcp: FastMCP):
             LIMIT %s;
         """
 
-        rows = await db.fetch_all(sql, params)
+        rows = await db_portal.fetch_all(sql, params)
 
         mf = int(max_features) if (include_features and max_features) else 0
         alerts_out = []
@@ -651,7 +652,7 @@ def register(mcp: FastMCP):
             LIMIT %s;
         """
 
-        rows = await db.fetch_all(sql, params)
+        rows = await db_portal.fetch_all(sql, params)
 
         mf = int(max_features) if (include_features and max_features) else 0
         alerts_out = []
@@ -696,12 +697,12 @@ def register(mcp: FastMCP):
             return {"error": "Debe indicar 'alert_id' (UUID) o 'alert_numeric_id'."}
 
         if alert_numeric_id:
-            row = await db.fetch_one(
+            row = await db_portal.fetch_one(
                 "SELECT id::text AS id, alert_id, feature_contribution AS features FROM public.mpredict_mpredictalert WHERE id = %s",
                 (int(alert_numeric_id),),
             )
         else:
-            row = await db.fetch_one(
+            row = await db_portal.fetch_one(
                 "SELECT id::text AS id, alert_id, feature_contribution AS features FROM public.mpredict_mpredictalert WHERE alert_id = %s",
                 (alert_id,),
             )
@@ -739,17 +740,17 @@ def register(mcp: FastMCP):
         # Resolver planta
         plant = None
         if plant_id:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND id = %s",
                 (int(plant_id),),
             )
         elif plant_name:
-            plant = await db.fetch_one(
+            plant = await db_portal.fetch_one(
                 "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
                 (plant_name,),
             )
             if not plant:
-                candidates = await db.fetch_all(
+                candidates = await db_portal.fetch_all(
                     "SELECT id::text AS id, name, acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
                 )
                 target = utils._norm(plant_name)
@@ -792,7 +793,7 @@ def register(mcp: FastMCP):
               AND {alert_where}
             LIMIT 1;
         """
-        row = await db.fetch_one(sql, tuple(params))
+        row = await db_portal.fetch_one(sql, tuple(params))
         if not row:
             return {"plant": {"id": plant["id"], "name": plant["name"]}, "error": "Alert not found with given criteria"}
 

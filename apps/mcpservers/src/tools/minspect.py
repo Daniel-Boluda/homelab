@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, List, Any, Dict, Tuple
 from fastmcp import FastMCP
-from src.deps import db, utils
+from apps.mcpservers.src.deps import db_portal
+from src.deps import utils
 import base64, json
 
 
@@ -41,14 +42,14 @@ async def _resolve_plant_id(
 
     if plant_name:
         # Exacto
-        p = await db.fetch_one(
+        p = await db_portal.fetch_one(
             "SELECT id FROM public.plants_plant WHERE deleted_at IS NULL AND name = %s",
             (plant_name,),
         )
         if p:
             return int(p["id"])
         # Normalizado
-        allp = await db.fetch_all(
+        allp = await db_portal.fetch_all(
             "SELECT id, name, COALESCE(acs_code,'') AS acs_code FROM public.plants_plant WHERE deleted_at IS NULL"
         )
         target = utils._norm(plant_name)
@@ -182,14 +183,14 @@ async def _list_notifications_impl(
     """.format(where_sql=where_sql)
 
     params.append(ps)
-    rows = await db.fetch_all(sql, tuple(params))
+    rows = await db_portal.fetch_all(sql, tuple(params))
 
     # Attach plant_name (and country/region if available -> NULL-safe placeholders)
     # We avoid depending on extra columns; return None when unknown.
     if rows:
         pid_list = list({int(r["plant_id"]) for r in rows})
         ph = ", ".join(["%s"] * len(pid_list))
-        plants = await db.fetch_all(
+        plants = await db_portal.fetch_all(
             f"SELECT id, name FROM public.plants_plant WHERE id IN ({ph})",
             tuple(pid_list),
         )
@@ -220,7 +221,7 @@ async def _list_notifications_impl(
 
 async def _count_notifications_impl(**filters) -> int:
     where_sql, params = _where_notifications(**filters)
-    row = await db.fetch_one(
+    row = await db_portal.fetch_one(
         f"SELECT COUNT(*)::int AS count FROM public.minspect_minspectdata {where_sql};",
         tuple(params) if params else None,
     )
@@ -269,14 +270,14 @@ async def _aggregate_notifications_impl(
         sql += " LIMIT %s"
         params.append(int(limit_per_group))
 
-    rows = await db.fetch_all(sql, tuple(params) if params else None)
+    rows = await db_portal.fetch_all(sql, tuple(params) if params else None)
 
     # Attach plant names if grouped by plant_id or plant
     if any(k in ("plant_id", "plant") for k in group_by) and rows:
         pid_list = list({int(r["plant"]) for r in rows if r.get("plant")})
         if pid_list:
             ph = ", ".join(["%s"] * len(pid_list))
-            plants = await db.fetch_all(
+            plants = await db_portal.fetch_all(
                 f"SELECT id, name FROM public.plants_plant WHERE id IN ({ph})",
                 tuple(pid_list),
             )
@@ -302,7 +303,7 @@ def register(mcp: FastMCP):
         qn = utils._norm(q)
 
         # Traemos todas y hacemos matching normalizado; en SQL sólo exact/ILIKE si quieres:
-        plants = await db.fetch_all(
+        plants = await db_portal.fetch_all(
             """
             SELECT id::text AS plant_id, name AS plant_name, COALESCE(acs_code,'') AS acs_code
             FROM public.plants_plant
@@ -352,7 +353,7 @@ def register(mcp: FastMCP):
             ORDER BY p.id
             LIMIT %s;
         """
-        rows = await db.fetch_all(sql, (last_id, ps))
+        rows = await db_portal.fetch_all(sql, (last_id, ps))
         items = []
         for r in rows:
             if active_only and not r["minspect_active"]:
@@ -530,7 +531,7 @@ def register(mcp: FastMCP):
             LIMIT %s;
         """
         params.append(int(limit or 10))
-        rows = await db.fetch_all(sql, tuple(params))
+        rows = await db_portal.fetch_all(sql, tuple(params))
         out = []
         for r in rows:
             item = {"scope": scope, "created_by": r["created_by"], "count": r["count"]}
@@ -571,7 +572,7 @@ def register(mcp: FastMCP):
             LIMIT %s;
         """
         params.append(int(limit or 10))
-        rows = await db.fetch_all(sql, tuple(params))
+        rows = await db_portal.fetch_all(sql, tuple(params))
         items = []
         for r in rows:
             items.append(
@@ -609,7 +610,7 @@ def register(mcp: FastMCP):
 
         # Traer nombres de planta
         ph = ", ".join(["%s"] * len(pids))
-        pl = await db.fetch_all(
+        pl = await db_portal.fetch_all(
             f"SELECT id::text AS plant_id, name AS plant_name FROM public.plants_plant WHERE id IN ({ph})",
             tuple(pids),
         )
@@ -633,7 +634,7 @@ def register(mcp: FastMCP):
         # Para cada planta: top N
         out_plants: List[Dict[str, Any]] = []
         for pid in pids:
-            rows = await db.fetch_all(
+            rows = await db_portal.fetch_all(
                 f"""
                 SELECT created_by, COUNT(*)::int AS count
                 FROM public.minspect_minspectdata
@@ -687,7 +688,7 @@ def register(mcp: FastMCP):
         where_alert_sql = " AND ".join(where_alert)
 
         # Traemos alertas recientes (limit) con info de asset y ts
-        alerts = await db.fetch_all(
+        alerts = await db_portal.fetch_all(
             f"""
             SELECT
                 m.id::text AS id, m.alert_id, m.timestamp,
@@ -734,7 +735,7 @@ def register(mcp: FastMCP):
                 ORDER BY creation_date DESC, id DESC
                 LIMIT 100;
             """
-            notifs = await db.fetch_all(notif_sql, tuple(nparams))
+            notifs = await db_portal.fetch_all(notif_sql, tuple(nparams))
             pairs.append(
                 {
                     "alert": {

@@ -8,11 +8,11 @@ from google.cloud.sql.connector import Connector, IPTypes
 # -----------------------------------------------------------------------------
 # DB (Cloud SQL Connector + pg8000)
 # -----------------------------------------------------------------------------
-INSTANCE = os.environ.get("INSTANCE") or os.environ.get("INSTANCE_CONNECTION_NAME")
-PGUSER   = os.environ.get("PGUSER")
-PGPASS   = os.environ.get("PGPASS")
-PGDB     = os.environ.get("PGDB")
-IP_TYPE  = (os.environ.get("IP_TYPE") or "PUBLIC").upper()  # PUBLIC | PRIVATE
+INSTANCE = os.environ.get("PORTAL_INSTANCE") or os.environ.get("INSTANCE_CONNECTION_NAME")
+PGUSER   = os.environ.get("PORTAL_PGUSER")
+PGPASS   = os.environ.get("PORTAL_PGPASS")
+PGDB     = os.environ.get("PORTAL_PGDB")
+IP_TYPE  = (os.environ.get("PORTAL_IP_TYPE") or "PUBLIC").upper()  # PUBLIC | PRIVATE
 
 if not all([INSTANCE, PGUSER, PGPASS, PGDB]):
     raise RuntimeError("Faltan variables DB: INSTANCE/INSTANCE_CONNECTION_NAME, PGUSER, PGPASS, PGDB")
