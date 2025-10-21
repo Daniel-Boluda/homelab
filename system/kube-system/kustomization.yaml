@@ -12,4 +12,4 @@ helmCharts:
     releaseName: kube-system
     repo: https://nvidia.github.io/k8s-device-plugin
     valuesFile: nvidia-device-plugin-values.yaml
-    version: 0.17.4
+    version: 0.18.0
