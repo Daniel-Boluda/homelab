@@ -116,7 +116,7 @@ def register(mcp: FastMCP):
         description_column: str = "description",
         aliasname_column: str = "aliasname",
         unit_column: str = "unit",
-    ) -> str:
+    ) -> Dict[str, Any]:
         result_dict = await _lookup_sensor_info(
             plant_name,
             sensor_codes,
@@ -127,21 +127,34 @@ def register(mcp: FastMCP):
             unit_column=unit_column,
         )
 
-        return f"""
-        The user is requesting new, user-friendly, and accurate aliases for sensors **{sensor_codes}** in plant **{plant_name}**.
+        return_dict = {
+        "message": f"The user is requesting new, user-friendly, and accurate alias for the sensors {sensor_codes} in plant {plant_name}",
+        "supporting_info": result_dict,
+        "guidelines_file": "HAC manual",
+        "desired_language": """      
+            - If the 'supporting_info' field contains any non-English terms, the alias name MUST be generated in that detected non-English language.
+            - Othwerwise use English to generate the alias name.
+            
+            Example:
 
-        * Use the general naming guidelines available in the workspace (HAC manual context).
-        * Combine those guidelines with the following supporting information per sensor:
-          {result_dict}
-        * For each sensor, create a derived alias that is descriptive but short, using **underscore ('_') separators**.
-        * Output the final result as a list of JSON objects, one per sensor, like:
+            * Scenario 1 (Non-English terms present):
+            * supporting_info: "KM1 Raw Coal Dosing to Mill Feeder, Laufmeldung Kohlewaage" (German terms present)
+            * Desired Alias Language: German (e.g., Kohlemuehle_Dosierung_Kohlewaage_Laufmeldung)
 
-        {{
-            "plant_name": "{plant_name}",
-            "sensor_code": "[SENSOR_CODE]",
-            "sensor_alias": "[YOUR_DERIVED_ALIAS]"
-        }}
-        """
+            * Scenario 2 (English terms only):
+            * supporting_info: "Cooler Crusher Motor Bearing Temperature" (English only)
+            * Desired Alias Language: English (e.g., Cooler_Crusher_Motor_Bearing_Temperature)
+            """,
+        "instructions": """
+            - Read the guidelines in the workspace context to identify the relevant sensor information in a cement plant.
+            - Read the examples in the workspace context to familiarize with the sensor alias names.
+            - Combine the insight from guidelines with the supporting information.
+            - For each sensor, create a derived alias that is descriptive but short, using **underscore ('_') separators**.
+            """,
+        "output_format": "List[Dict[str, str]] with keys 'plant_name', 'sensor_code' and 'sensor_alias'"
+        }
+
+        return return_dict
 
     # ✅ UPDATE ESTRICTO: SIEMPRE por logname + plant_name (sin opciones creativas)
     @mcp.tool(description="Actualiza 'proposed_alias' en BigQuery filtrando por logname + plant_name (modo estricto).")
