@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 from fastmcp import FastMCP
 from google.cloud import bigquery
-from fastmcp.prompts.prompt import Message
 import pandas as pd
 import re
 
@@ -128,15 +127,13 @@ def register(mcp: FastMCP):
             unit_column=unit_column,
         )
 
-        return Message(f"""
+        return f"""
         The user is requesting new, user-friendly, and accurate aliases for sensors **{sensor_codes}** in plant **{plant_name}**.
 
         * Use the general naming guidelines available in the workspace (HAC manual context).
         * Combine those guidelines with the following supporting information per sensor:
           {result_dict}
         * For each sensor, create a derived alias that is descriptive but short, using **underscore ('_') separators**.
-        * Ensure the derived alias has the same language found in the supporting information.
-        * Look at examples in the logname aliasname examples available in the workspace.
         * Output the final result as a list of JSON objects, one per sensor, like:
 
         {{
@@ -144,7 +141,7 @@ def register(mcp: FastMCP):
             "sensor_code": "[SENSOR_CODE]",
             "sensor_alias": "[YOUR_DERIVED_ALIAS]"
         }}
-        """)
+        """
 
     # ✅ UPDATE ESTRICTO: SIEMPRE por logname + plant_name (sin opciones creativas)
     @mcp.tool(description="Actualiza 'proposed_alias' en BigQuery filtrando por logname + plant_name (modo estricto).")
