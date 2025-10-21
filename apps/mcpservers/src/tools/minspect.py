@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, List, Any, Dict, Tuple
 from fastmcp import FastMCP
-from apps.mcpservers.src.deps import db_portal
+from src.deps import db_portal
 from src.deps import utils
 import base64, json
 

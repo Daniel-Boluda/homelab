@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from typing import Optional
-from apps.mcpservers.src.deps import db_portal
+from src.deps import db_portal
 from src.deps import utils
 from fastmcp import FastMCP
 
