@@ -127,14 +127,14 @@ async def _list_notifications_impl(
     date_to: Optional[str] = None,
     planner_grb: Optional[str] = None,
     cursor: Optional[str] = None,
-    page_size: Optional[int] = None,
+    page_size: Optional[int] = 500,
     sort: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Global list with filters + keyset pagination.
     sort: default = -created_at => creation_date DESC, id DESC
     """
-    ps = utils._page_size(page_size, default=200, max_value=10_000)
+    ps = utils._page_size(page_size)
 
     # keyset
     last_id = _dec_cursor(cursor)
@@ -333,9 +333,9 @@ def register(mcp: FastMCP):
         active_only: Optional[bool] = False,
         country: Optional[str] = None,  # placeholder; devuelve null
         cursor: Optional[str] = None,
-        page_size: Optional[int] = 100,
+        page_size: Optional[int] = 200,
     ) -> dict:
-        ps = utils._page_size(page_size, default=100)
+        ps = utils._page_size(page_size)
         last_id = _dec_cursor(cursor)
 
         # Determinamos actividad Minspect por existencia de alguna notificación
@@ -386,7 +386,7 @@ def register(mcp: FastMCP):
         priority: Optional[str] = None,
         planner_grb: Optional[str] = None,
         sort: Optional[str] = "-created_at",
-        page_size: Optional[int] = 200,
+        page_size: Optional[int] = 500,
         cursor: Optional[str] = None,
     ) -> dict:
         pid_list = None

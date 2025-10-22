@@ -7,9 +7,9 @@ from fastmcp import FastMCP
 
 def register(mcp: FastMCP):
     
-    # -------- list_plants --------
-    @mcp.tool(description="Lista plantas con paginación keyset.")
-    async def list_plants(page_size: Optional[int] = None, cursor: Optional[str] = None) -> dict:
+    # -------- mpredict_list_plants --------
+    @mcp.tool(description="Lista plantas de mpredict, minspect con paginación keyset.")
+    async def mpredict_list_plants(page_size: Optional[int] = None, cursor: Optional[str] = None) -> dict:
         ps = utils._page_size(page_size)
         after_id = int(cursor) if cursor else 0
         sql = """
@@ -23,9 +23,9 @@ def register(mcp: FastMCP):
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"count": len(rows), "next_cursor": next_cursor, "plants": rows}
 
-    # -------- list_machines_for_plant --------
+    # -------- mpredict_list_machines_for_plant --------
     @mcp.tool(description="Lista máquinas de una planta. detail=names|summary|full")
-    async def list_machines_for_plant(
+    async def mpredict_list_machines_for_plant(
         plant_name: Optional[str] = None,
         plant_id: Optional[str] = None,
         detail: Optional[str] = "summary",  # names | summary | full
@@ -133,9 +133,9 @@ def register(mcp: FastMCP):
             "machines": rows,
         }
 
-    # -------- machines_with_open_alerts_in_plant --------
+    # -------- mpredict_machines_with_open_alerts_in_plant --------
     @mcp.tool(description="Máquinas con alertas abiertas en una planta (detail=names|summary|full).")
-    async def machines_with_open_alerts_in_plant(
+    async def mpredict_machines_with_open_alerts_in_plant(
         plant_name: Optional[str] = None,
         plant_id: Optional[str] = None,
         detail: Optional[str] = "summary",
@@ -230,9 +230,9 @@ def register(mcp: FastMCP):
             "machines": rows,
         }
 
-    # -------- machines_with_high_risk_in_plant --------
+    # -------- mpredict_machines_with_high_risk_in_plant --------
     @mcp.tool(description="Máquinas con riesgo HIGH en una planta (detail=names|summary|full).")
-    async def machines_with_high_risk_in_plant(
+    async def mpredict_machines_with_high_risk_in_plant(
         plant_name: Optional[str] = None,
         plant_id: Optional[str] = None,
         detail: Optional[str] = "summary",
@@ -317,9 +317,9 @@ def register(mcp: FastMCP):
             "machines": rows,
         }
 
-    # -------- list_machines (global) --------
+    # -------- mpredict_list_machines (global) --------
     @mcp.tool(description="Lista máquinas global (detail=names|summary|full), paginación keyset.")
-    async def list_machines(
+    async def mpredict_list_machines(
         detail: Optional[str] = "summary",
         page_size: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -374,9 +374,9 @@ def register(mcp: FastMCP):
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
-    # -------- machines_with_open_alerts (global) --------
+    # -------- mpredict_machines_with_open_alerts (global) --------
     @mcp.tool(description="Máquinas con alertas abiertas (global).")
-    async def machines_with_open_alerts(
+    async def mpredict_machines_with_open_alerts(
         detail: Optional[str] = "summary",
         page_size: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -439,9 +439,9 @@ def register(mcp: FastMCP):
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
-    # -------- machines_with_high_risk (global) --------
+    # -------- mpredict_machines_with_high_risk (global) --------
     @mcp.tool(description="Máquinas con riesgo HIGH (global).")
-    async def machines_with_high_risk(
+    async def mpredict_machines_with_high_risk(
         detail: Optional[str] = "summary",
         page_size: Optional[int] = None,
         cursor: Optional[str] = None,
@@ -496,9 +496,9 @@ def register(mcp: FastMCP):
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"detail": detail or "summary", "count": len(rows), "next_cursor": next_cursor, "machines": rows}
 
-    # -------- list_alerts_in_plant --------
+    # -------- mpredict_list_alerts_in_plant --------
     @mcp.tool(description="Lista alertas de una planta (state=Open|Closed|Any). include_features opcional.")
-    async def list_alerts_in_plant(
+    async def mpredict_list_alerts_in_plant(
         plant_name: Optional[str] = None,
         plant_id: Optional[str] = None,
         state: Optional[str] = "Open",
@@ -604,9 +604,9 @@ def register(mcp: FastMCP):
         }
 
 
-    # -------- list_alerts (global) --------
+    # -------- mpredict_list_alerts (global) --------
     @mcp.tool(description="Lista alertas global (state=Open|Closed|Any), include_features opcional.")
-    async def list_alerts(
+    async def mpredict_list_alerts(
         state: Optional[str] = "Open",
         include_features: Optional[bool] = False,
         max_features: Optional[int] = None,
@@ -686,9 +686,9 @@ def register(mcp: FastMCP):
         next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
         return {"state": s.upper() if s != "any" else "ANY", "count": len(alerts_out), "next_cursor": next_cursor, "alerts": alerts_out}
 
-    # -------- get_alert_features --------
+    # -------- mpredict_get_alert_features --------
     @mcp.tool(description="Devuelve features para una alerta (por numeric id o UUID).")
-    async def get_alert_features(
+    async def mpredict_get_alert_features(
         alert_id: Optional[str] = None,
         alert_numeric_id: Optional[str] = None,
         max_features: Optional[int] = None,
@@ -723,9 +723,9 @@ def register(mcp: FastMCP):
             "features": feats,
         }
 
-    # -------- get_alert_features_in_plant --------
+    # -------- mpredict_get_alert_features_in_plant --------
     @mcp.tool(description="Devuelve features de una alerta dentro de una planta.")
-    async def get_alert_features_in_plant(
+    async def mpredict_get_alert_features_in_plant(
         plant_name: Optional[str] = None,
         plant_id: Optional[str] = None,
         alert_id: Optional[str] = None,

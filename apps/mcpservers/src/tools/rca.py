@@ -21,6 +21,67 @@ def _parse_list(value: Optional[str]) -> Optional[List[str]]:
 
 def register(mcp: FastMCP):
 
+    # -------------------------- rca_list_plants --------------------------
+    @mcp.tool(description="Lista plantas posibles (tabla rca_data_plant) con filtros y paginación keyset.")
+    async def rca_list_plants(
+        text: Optional[str] = None,               # busca en plant / country / region
+        country: Optional[List[str]] = None,      # ["Poland","Egypt"] o "Poland,Egypt"
+        region: Optional[List[str]] = None,       # ["EU","AMEA"] o "EU,AMEA"
+        page_size: Optional[int] = None,
+        cursor: Optional[str] = None,             # keyset: id > cursor
+    ) -> dict:
+        """
+        Devuelve las plantas disponibles desde public.rca_data_plant.
+        - text: ILIKE sobre plant, country, region
+        - country/region: filtros exactos (aceptan lista o string separada por comas/semicolon)
+        - Paginación keyset (id > cursor)
+        """
+        ps = utils._page_size(page_size)
+        after_id = int(cursor) if cursor else 0
+
+        like = _like_param(text)
+        country_list = _parse_list(country)
+        region_list  = _parse_list(region)
+
+        where_parts: List[str] = ["p.id > %s"]
+        params: List[Any] = [after_id]
+
+        if like:
+            where_parts.append("(LOWER(COALESCE(p.plant,'')) ILIKE %s OR LOWER(COALESCE(p.country,'')) ILIKE %s OR LOWER(COALESCE(p.region,'')) ILIKE %s)")
+            params.extend([like, like, like])
+
+        if country_list:
+            where_parts.append("p.country = ANY(%s)")
+            params.append(country_list)
+
+        if region_list:
+            where_parts.append("p.region = ANY(%s)")
+            params.append(region_list)
+
+        where_sql = " AND ".join(where_parts)
+
+        sql = f"""
+            SELECT
+                p.id::text AS id,
+                p.plant,
+                p.country,
+                p.region
+            FROM public.rca_data_plant p
+            WHERE {where_sql}
+            ORDER BY p.id
+            LIMIT %s;
+        """
+        params.append(ps)
+
+        rows = await db_cause.fetch_all(sql, tuple(params))
+        next_cursor = rows[-1]["id"] if rows and len(rows) == ps else None
+
+        return {
+            "count": len(rows),
+            "next_cursor": next_cursor,
+            "plants": rows
+        }
+        
     # -------------------------- rca_list_problems --------------------------
     @mcp.tool(
         description=(
