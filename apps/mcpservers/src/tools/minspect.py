@@ -716,7 +716,10 @@ def register(mcp: FastMCP):
             before = f"{window_before_hours or 72} hours"
             after = f"{window_after_hours or 168} hours"
 
-            notif_where = ["plant_id = %s", "creation_date BETWEEN %s::timestamp - INTERVAL %s AND %s::timestamp + INTERVAL %s"]
+            notif_where = [
+                "plant_id = %s",
+                "creation_date BETWEEN %s::timestamp - %s::interval AND %s::timestamp + %s::interval",
+            ]
             nparams: List[Any] = [pid, ts, before, ts, after]
 
             if asset:
