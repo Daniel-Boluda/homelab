@@ -128,6 +128,7 @@ async def _list_notifications_impl(
     planner_grb: Optional[str] = None,
     cursor: Optional[str] = None,
     page_size: Optional[int] = 500,
+    asset: Optional[str] = None,
     sort: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
@@ -155,6 +156,14 @@ async def _list_notifications_impl(
     )
 
     # Sort policy => use creation_date DESC then id DESC by default; keyset uses id threshold.
+    # Add optional asset prefix filter on device_id or fl before keyset condition.
+    if asset:
+        if where_sql:
+            where_sql = f"{where_sql} AND (device_id ILIKE %s OR fl ILIKE %s)"
+        else:
+            where_sql = "WHERE (device_id ILIKE %s OR fl ILIKE %s)"
+        params.extend((f"{asset}%", f"{asset}%"))
+
     # We strictly keyset on id; secondary sort is stable within page.
     if where_sql:
         where_sql = f"{where_sql} AND id > %s"
@@ -373,9 +382,13 @@ def register(mcp: FastMCP):
     # ----------------------------------------
     # (2) Global Notifications
     # ----------------------------------------
-    @mcp.tool(description="Global notifications list con filtros y paginación keyset.")
+    @mcp.tool(description="Global notifications list con filtros y paginación keyset. Admite plant_id/plant_name y filtro de asset (prefijo).")
     async def minspect_notifications_list(
         plant_ids: Optional[str] = None,  # CSV de ids
+        plant_id: Optional[str] = None,
+        plant_name: Optional[str] = None,
+        asset: Optional[str] = None,
+        limit: Optional[int] = None,
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
         year: Optional[int] = None,
@@ -396,8 +409,19 @@ def register(mcp: FastMCP):
             except Exception:
                 return {"error": "INVALID_ARGUMENT: plant_ids must be CSV of integers"}
 
+        # Allow single plant_id or plant_name as an alternative
+        resolved_pid = None
+        if plant_id or plant_name:
+            resolved_pid = await _resolve_plant_id(plant_id=plant_id, plant_name=plant_name)
+            if not resolved_pid:
+                return {"error": "Plant not found"}
+
+        # limit overrides page_size if provided
+        effective_page_size = int(limit) if isinstance(limit, int) and limit > 0 else page_size
+
         data = await _list_notifications_impl(
             plant_ids=pid_list,
+            plant_id=resolved_pid,
             date_from=date_from,
             date_to=date_to,
             year=year,
@@ -407,9 +431,10 @@ def register(mcp: FastMCP):
             system_status=system_status,
             priority=priority,
             planner_grb=planner_grb,
-            page_size=page_size,
+            page_size=effective_page_size,
             cursor=cursor,
             sort=sort,
+            asset=asset,
         )
         return data
 
