@@ -70,7 +70,7 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "automergeType": "branch",
+      "automergeType": "pr",
       "ignoreTests": true,
       "platformAutomerge": true
     },
@@ -111,7 +111,7 @@
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
       "ignoreTests": true,
-      "automergeType": "branch",
+      "automergeType": "pr",
       "platformAutomerge": true
     },
     {
@@ -151,7 +151,7 @@
       ],
       "matchCurrentVersion": "!/^0/",
       "automerge": true,
-      "automergeType": "branch",
+      "automergeType": "pr",
       "ignoreTests": true,
       "platformAutomerge": true
     },
