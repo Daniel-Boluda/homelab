@@ -1,222 +1,224 @@
 {
-  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
-  extends: [
-    'config:recommended',
-    ':dependencyDashboard',
-    ':preserveSemverRanges',
-    ':disableRateLimiting',
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":preserveSemverRanges",
+    ":disableRateLimiting"
   ],
+  "dependencyDashboard": true,
+  "dependencyDashboardAutoclose": false,
   "branchConcurrentLimit": 0,
   "prConcurrentLimit": 0,
   "prHourlyLimit": 0,
-  gitIgnoredAuthors: [
-    '/^\\d+\\+renovate\\d+-bot\\[bot\\]@users\\.noreply\\.github\\.com$/',
+  "gitIgnoredAuthors": [
+    "/^\\d+\\+renovate\\d+-bot\\[bot\\]@users\\.noreply\\.github\\.com$/"
   ],
-  forkProcessing: 'enabled',
-  rebaseWhen: 'conflicted',
-  commitMessagePrefix: '{{parentDir}}: ',
-  timezone: 'Europe/Madrid',
-  schedule: [],
-  enabledManagers: [
-    'argocd',
-    'github-actions',
-    'helm-values',
-    'helmv3',
-    'kustomize',
-    'pre-commit',
-    'custom.regex',
+  "forkProcessing": "enabled",
+  "rebaseWhen": "conflicted",
+  "commitMessagePrefix": "{{parentDir}}: ",
+  "timezone": "Europe/Madrid",
+  "schedule": [],
+  "enabledManagers": [
+    "argocd",
+    "github-actions",
+    "helm-values",
+    "helmv3",
+    "kustomize",
+    "pre-commit",
+    "custom.regex"
   ],
-  'pre-commit': {
-    enabled: true,
-    commitMessagePrefix: 'pre-commit: ',
-    branchPrefix: 'pre-commit-',
+  "pre-commit": {
+    "enabled": true,
+    "commitMessagePrefix": "pre-commit: ",
+    "branchPrefix": "pre-commit-"
   },
-  configMigration: true,
-  customManagers: [
+  "configMigration": true,
+  "customManagers": [
     {
-      customType: 'regex',
-      description: 'Process custom dependencies with double quotes, after colon, URLs and variables',
-      managerFilePatterns: [
-        '/.+\\.ya?ml$/',
+      "customType": "regex",
+      "description": "Process custom dependencies with double quotes, after colon, URLs and variables",
+      "managerFilePatterns": [
+        "/.+\\.ya?ml$/"
       ],
-      matchStrings: [
-        '#\\srenovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\n.*?"(?<currentValue>.*)"\n',
-        '#\\srenovate: datasource=(?<datasource>\\S+)( versioning=(?<versioning>\\S+))?\n.*?: (?<depName>\\S+):(?<currentValue>.*)\n',
-        '#\\srenovate: url-match: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\n.*?\\/(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)\\/.*',
-        '#\\srenovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?( extractVersion=(?<extractVersion>\\S+))?\n.*?: (?<currentValue>.*)\n',
+      "matchStrings": [
+        "#\\srenovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\n.*?\\\"(?<currentValue>.*)\\\"\\n",
+        "#\\srenovate: datasource=(?<datasource>\\S+)( versioning=(?<versioning>\\S+))?\\n.*?: (?<depName>\\S+):(?<currentValue>.*)\\n",
+        "#\\srenovate: url-match: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?\\n.*?\\/(?<currentValue>v[0-9]+\\.[0-9]+\\.[0-9]+)\\/.*",
+        "#\\srenovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( versioning=(?<versioning>\\S+))?( extractVersion=(?<extractVersion>\\S+))?\\n.*?: (?<currentValue>.*)\\n"
       ],
-      versioningTemplate: '{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}',
-    },
+      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}semver{{/if}}"
+    }
   ],
-  packageRules: [
+  "packageRules": [
     {
-      additionalBranchPrefix: '{{parentDir}}-',
-      addLabels: [
-        'renovate/{{parentDir}}',
+      "additionalBranchPrefix": "{{parentDir}}-",
+      "addLabels": [
+        "renovate/{{parentDir}}"
       ],
-      matchPackageNames: [
-        '/.*/',
-      ],
+      "matchPackageNames": [
+        "/.*/"
+      ]
     },
     {
-      matchManagers: [
-        'github-actions',
+      "matchManagers": [
+        "github-actions"
       ],
-      matchUpdateTypes: [
-        'minor',
-        'patch',
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
       ],
-      matchCurrentVersion: '!/^0/',
-      automerge: true,
-      automergeType: 'branch',
-      ignoreTests: true,
-      platformAutomerge: true,
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "branch",
+      "ignoreTests": true,
+      "platformAutomerge": true
     },
     {
-      matchDatasources: [
-        'docker',
+      "matchDatasources": [
+        "docker"
       ],
-      versioning: 'loose',
-      matchPackageNames: [
-        '/lidarr/',
-        '/prowlarr/',
-        '/qbittorrent/',
-        '/radarr/',
-        '/sonarr/',
-      ],
+      "versioning": "loose",
+      "matchPackageNames": [
+        "/lidarr/",
+        "/prowlarr/",
+        "/qbittorrent/",
+        "/radarr/",
+        "/sonarr/"
+      ]
     },
     {
-      matchDatasources: [
-        'docker',
+      "matchDatasources": [
+        "docker"
       ],
-      matchPackageNames: [
-        'nextcloud',
-        'redis',
+      "matchPackageNames": [
+        "nextcloud",
+        "redis"
       ],
-      matchUpdateTypes: [
-        'major',
+      "matchUpdateTypes": [
+        "major"
       ],
-      minimumReleaseAge: '30 days',
+      "minimumReleaseAge": "30 days"
     },
     {
-      matchDatasources: [
-        'docker',
+      "matchDatasources": [
+        "docker"
       ],
-      matchUpdateTypes: [
-        'minor',
-        'patch',
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
       ],
-      matchCurrentVersion: '!/^0/',
-      automerge: true,
-      ignoreTests: true,
-      automergeType: 'branch',
-      platformAutomerge: true,
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "ignoreTests": true,
+      "automergeType": "branch",
+      "platformAutomerge": true
     },
     {
-      matchDatasources: [
-        'docker',
+      "matchDatasources": [
+        "docker"
       ],
-      matchUpdateTypes: [
-        'digest',
+      "matchUpdateTypes": [
+        "digest"
       ],
-      automerge: true,
-      ignoreTests: true,
-      automergeType: 'pr',
-      platformAutomerge: true,
+      "automerge": true,
+      "ignoreTests": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     },
     {
-      matchPackageNames: [
-        'hashicorp/vault',
-        'registry.k8s.io/sig-storage/csi-provisioner',
-        'registry.k8s.io/sig-storage/csi-snapshotter',
+      "matchPackageNames": [
+        "hashicorp/vault",
+        "registry.k8s.io/sig-storage/csi-provisioner",
+        "registry.k8s.io/sig-storage/csi-snapshotter"
       ],
-      matchManagers: [
-        'custom.regex',
+      "matchManagers": [
+        "custom.regex"
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
+      "matchUpdateTypes": [
+        "major",
+        "minor"
       ],
-      minimumReleaseAge: '30 days',
+      "minimumReleaseAge": "30 days"
     },
     {
-      matchDatasources: [
-        'helm',
+      "matchDatasources": [
+        "helm"
       ],
-      matchUpdateTypes: [
-        'minor',
-        'patch',
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
       ],
-      matchCurrentVersion: '!/^0/',
-      automerge: true,
-      automergeType: 'branch',
-      ignoreTests: true,
-      platformAutomerge: true,
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true,
+      "automergeType": "branch",
+      "ignoreTests": true,
+      "platformAutomerge": true
     },
     {
-      matchPackageNames: [
-        'k3s-io/k3s',
+      "matchPackageNames": [
+        "k3s-io/k3s"
       ],
-      matchManagers: [
-        'custom.regex',
+      "matchManagers": [
+        "custom.regex"
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
+      "matchUpdateTypes": [
+        "major",
+        "minor"
       ],
-      minimumReleaseAge: '120 days',
-      groupName: 'k3s upgrade',
-      additionalBranchPrefix: 'k3s-',
-      addLabels: [
-        'renovate/k3s',
-      ],
+      "minimumReleaseAge": "120 days",
+      "groupName": "k3s upgrade",
+      "additionalBranchPrefix": "k3s-",
+      "addLabels": [
+        "renovate/k3s"
+      ]
     },
     {
-      matchDatasources: [
-        'docker',
+      "matchDatasources": [
+        "docker"
       ],
-      matchUpdateTypes: [
-        'minor',
+      "matchUpdateTypes": [
+        "minor"
       ],
-      matchPackageNames: [
-        '/keycloak/',
-        '/appdaemon/',
+      "matchPackageNames": [
+        "/keycloak/",
+        "/appdaemon/"
       ],
-      matchCurrentVersion: '!/^0/',
-      automerge: false,
-      ignoreTests: false,
-      platformAutomerge: false,
+      "matchCurrentVersion": "!/^0/",
+      "automerge": false,
+      "ignoreTests": false,
+      "platformAutomerge": false
     },
     {
-      description: 'Group k3s changes in one PR',
-      matchPackageNames: [
-        'k3s-io/k3s',
+      "description": "Group k3s changes in one PR",
+      "matchPackageNames": [
+        "k3s-io/k3s"
       ],
-      matchManagers: [
-        'custom.regex',
+      "matchManagers": [
+        "custom.regex"
       ],
-      additionalBranchPrefix: 'k3s-',
-      addLabels: [
-        'renovate/k3s',
+      "additionalBranchPrefix": "k3s-",
+      "addLabels": [
+        "renovate/k3s"
       ],
-      groupName: 'k3s upgrade',
-      groupSlug: 'k3s-upgrade',
+      "groupName": "k3s upgrade",
+      "groupSlug": "k3s-upgrade"
     },
     {
-      description: 'Group app-template updates in one PR',
-      matchDatasources: [
-        'helm',
+      "description": "Group app-template updates in one PR",
+      "matchDatasources": [
+        "helm"
       ],
-      groupName: 'app-template',
-      groupSlug: 'app-template',
-      additionalBranchPrefix: 'app-template-',
-      addLabels: [
-        'renovate/app-template',
+      "groupName": "app-template",
+      "groupSlug": "app-template",
+      "additionalBranchPrefix": "app-template-",
+      "addLabels": [
+        "renovate/app-template"
       ],
-      matchPackageNames: [
-        '/app-template/',
+      "matchPackageNames": [
+        "/app-template/"
       ],
-      commitMessagePrefix: 'app-template: ',
-    },
-  ],
+      "commitMessagePrefix": "app-template: "
+    }
+  ]
 }
