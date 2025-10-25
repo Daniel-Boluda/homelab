@@ -64,6 +64,8 @@ minio:
   resources:
     requests:
       memory: 2Gi
+    limits:
+      memory: 10Gi
 
   policies:
   - name: pandoReadWritePolicy
